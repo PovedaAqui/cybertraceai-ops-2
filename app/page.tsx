@@ -1,9 +1,10 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
+import ChatInput from '@/components/ChatInput';
 
 export default function Chat() {
-  const { messages, input, handleInputChange, handleSubmit } = useChat();
+  const { messages, append } = useChat();
   return (
     <div className="flex flex-col w-full max-w-md py-24 mx-auto stretch">
       {messages.map(message => (
@@ -41,14 +42,14 @@ export default function Chat() {
         </div>
       ))}
 
-      <form onSubmit={handleSubmit}>
-        <input
-          className="fixed dark:bg-zinc-900 bottom-0 w-full max-w-md p-2 mb-8 border border-zinc-300 dark:border-zinc-800 rounded shadow-xl"
-          value={input}
-          placeholder="Say something..."
-          onChange={handleInputChange}
+      {/* Chat input fixed at the bottom */}
+      <div className="fixed bottom-0 w-full max-w-md mb-8">
+        <ChatInput
+          onSend={message =>
+            append({ role: 'user', content: message }).catch(console.error)
+          }
         />
-      </form>
+      </div>
     </div>
   );
 }
