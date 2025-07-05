@@ -31,7 +31,7 @@ export default function IndividualMessage({
         <div className="bg-blue-600 text-white rounded-lg px-4 py-2 max-w-[80%] whitespace-pre-wrap">
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
-            className="prose prose-invert break-words text-sm"
+            className="prose prose-invert prose-sm break-words"
           >
             {message.content}
           </ReactMarkdown>
@@ -62,15 +62,17 @@ export default function IndividualMessage({
         </svg>
       </div>
 
-      <div className="flex flex-col w-full">
+      <div className="flex flex-col w-full min-w-0">
         {/* Message content */}
-        <div className="bg-zinc-800 text-zinc-200 rounded-lg px-4 py-2 max-w-[80%] whitespace-pre-wrap">
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
-            className="prose prose-invert break-words text-sm"
-          >
-            {message.content}
-          </ReactMarkdown>
+        <div className="bg-zinc-800 text-zinc-200 rounded-lg p-4 w-full">
+          <div className="overflow-x-auto whitespace-pre-wrap">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              className="prose prose-invert prose-sm max-w-none break-words"
+            >
+              {message.content}
+            </ReactMarkdown>
+          </div>
         </div>
 
         {showCopyButton && (

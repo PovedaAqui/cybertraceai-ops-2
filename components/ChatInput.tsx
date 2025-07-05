@@ -49,7 +49,7 @@ export default function ChatInput({ onSend, placeholder = 'Send a message...' }:
         className="w-full bg-zinc-800 text-white placeholder-zinc-400 rounded-lg resize-none pr-12 py-3 pl-4 focus:outline-none"
         placeholder={placeholder}
         value={value}
-        rows={1}
+        rows={2}
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={handleKeyDown}
       />
