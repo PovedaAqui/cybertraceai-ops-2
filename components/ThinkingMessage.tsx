@@ -12,7 +12,7 @@ const ThinkingMessage = () => {
         className="w-2 h-2 bg-zinc-500 rounded-full animate-pulse dark:bg-zinc-400"
         style={{ animationDelay: '0.4s' }}
       ></div>
-      <span className="text-sm">Hmm...</span>
+      <span className="text-sm">Thinking...</span>
     </div>
   );
 };
