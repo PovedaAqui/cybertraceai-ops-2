@@ -31,7 +31,12 @@ export default function MessagesList({
       {messages.length === 0 && !showThinking ? (
         <Greeting />
       ) : (
-        messages.flatMap(message => {
+        messages.map((message, index) => {
+          const isLastMessage = index === messages.length - 1;
+          const showCopyButton =
+            message.role === 'assistant' &&
+            (!isLastMessage || status === 'ready' || status === 'idle');
+
           if (!message.parts) {
             if (
               (message.role === 'user' || message.role === 'assistant') &&
@@ -40,65 +45,75 @@ export default function MessagesList({
               return (
                 <IndividualMessage
                   key={message.id}
-                  message={{ role: message.role, content: message.content }}
+                  message={message}
+                  showCopyButton={showCopyButton}
                 />
               );
             }
             return null;
           }
 
-          return message.parts.map((part, i) => {
-            const key = `${message.id}-${i}`;
+          return (
+            <div key={message.id}>
+              {message.parts.map((part, i) => {
+                const key = `${message.id}-${i}`;
 
-            if (part.type === 'text') {
-              return (
-                <IndividualMessage
-                  key={key}
-                  message={{
-                    role: message.role as 'user' | 'assistant',
-                    content: part.text,
-                  }}
-                />
-              );
-            }
+                if (part.type === 'text') {
+                  return (
+                    <IndividualMessage
+                      key={key}
+                      message={{
+                        ...message,
+                        content: part.text,
+                      }}
+                      showCopyButton={showCopyButton}
+                    />
+                  );
+                }
 
-            if (part.type === 'tool-invocation') {
-              const { toolInvocation } = part;
-              if (
-                toolInvocation.state === 'partial-call' ||
-                toolInvocation.state === 'call'
-              ) {
-                return (
-                  <div
-                    key={key}
-                    className="bg-zinc-100 dark:bg-zinc-800 p-2 rounded text-sm font-mono break-words mb-4"
-                  >
-                    <span className="font-semibold">
-                      🔧 Tool&nbsp;{toolInvocation.toolName}
-                    </span>
-                    {': '}
-                    <code>{JSON.stringify(toolInvocation.args, null, 2)}</code>
-                  </div>
-                );
-              }
+                if (part.type === 'tool-invocation') {
+                  const { toolInvocation } = part;
+                  if (
+                    toolInvocation.state === 'partial-call' ||
+                    toolInvocation.state === 'call'
+                  ) {
+                    return (
+                      <div
+                        key={key}
+                        className="bg-zinc-100 dark:bg-zinc-800 p-2 rounded text-sm font-mono break-words mb-4"
+                      >
+                        <span className="font-semibold">
+                          🔧 Tool&nbsp;{toolInvocation.toolName}
+                        </span>
+                        {': '}
+                        <code>
+                          {JSON.stringify(toolInvocation.args, null, 2)}
+                        </code>
+                      </div>
+                    );
+                  }
 
-              if (toolInvocation.state === 'result') {
-                return (
-                  <div
-                    key={key}
-                    className="bg-green-50 dark:bg-green-900 p-2 rounded text-sm font-mono break-words mb-4"
-                  >
-                    <span className="font-semibold">
-                      ✅ {toolInvocation.toolName}&nbsp;result
-                    </span>
-                    {': '}
-                    <code>{JSON.stringify(toolInvocation.result, null, 2)}</code>
-                  </div>
-                );
-              }
-            }
-            return null;
-          });
+                  if (toolInvocation.state === 'result') {
+                    return (
+                      <div
+                        key={key}
+                        className="bg-green-50 dark:bg-green-900 p-2 rounded text-sm font-mono break-words mb-4"
+                      >
+                        <span className="font-semibold">
+                          ✅ {toolInvocation.toolName}&nbsp;result
+                        </span>
+                        {': '}
+                        <code>
+                          {JSON.stringify(toolInvocation.result, null, 2)}
+                        </code>
+                      </div>
+                    );
+                  }
+                }
+                return null;
+              })}
+            </div>
+          );
         })
       )}
       {showThinking && lastMessageIsUser && <ThinkingMessage />}
