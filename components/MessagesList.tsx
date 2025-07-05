@@ -5,6 +5,8 @@ import type { Message } from '@ai-sdk/react';
 import Greeting from './Greeting';
 import IndividualMessage from './IndividualMessage';
 import ThinkingMessage from './ThinkingMessage';
+import Accordion from './Accordion';
+import { Wrench } from 'lucide-react';
 
 type MessagesListProps = {
   messages: Readonly<Message[]>;
@@ -73,42 +75,49 @@ export default function MessagesList({
 
                 if (part.type === 'tool-invocation') {
                   const { toolInvocation } = part;
-                  if (
-                    toolInvocation.state === 'partial-call' ||
-                    toolInvocation.state === 'call'
-                  ) {
-                    return (
-                      <div
-                        key={key}
-                        className="bg-zinc-100 dark:bg-zinc-800 p-2 rounded text-sm font-mono break-words mb-4"
-                      >
-                        <span className="font-semibold">
-                          🔧 Tool&nbsp;{toolInvocation.toolName}
-                        </span>
-                        {': '}
-                        <code>
-                          {JSON.stringify(toolInvocation.args, null, 2)}
-                        </code>
-                      </div>
-                    );
-                  }
+                  const toolName = toolInvocation.toolName;
+                  const isResult = toolInvocation.state === 'result';
 
-                  if (toolInvocation.state === 'result') {
-                    return (
-                      <div
-                        key={key}
-                        className="bg-green-50 dark:bg-green-900 p-2 rounded text-sm font-mono break-words mb-4"
-                      >
-                        <span className="font-semibold">
-                          ✅ {toolInvocation.toolName}&nbsp;result
+                  return (
+                    <Accordion
+                      key={key}
+                      title={
+                        <span className="flex items-center gap-2">
+                          <span>
+                            {isResult
+                              ? '✅ Tool'
+                              : '🔧 Using tool'}{' '}
+                            <code className="font-semibold">{toolName}</code>
+                          </span>
                         </span>
-                        {': '}
-                        <code>
-                          {JSON.stringify(toolInvocation.result, null, 2)}
-                        </code>
+                      }
+                      icon={null}
+                      defaultOpen={false}
+                    >
+                      <div>
+                        <p className="font-semibold text-zinc-600 dark:text-zinc-400">
+                          Parameters:
+                        </p>
+                        <pre className="bg-zinc-100 dark:bg-zinc-800 p-2 rounded text-sm font-mono break-words my-2 text-zinc-200 whitespace-pre-wrap">
+                          <code>
+                            {JSON.stringify(toolInvocation.args, null, 2)}
+                          </code>
+                        </pre>
                       </div>
-                    );
-                  }
+                      {isResult && toolInvocation.result && (
+                        <div>
+                          <p className="font-semibold text-zinc-600 dark:text-zinc-400">
+                            Result:
+                          </p>
+                          <pre className="bg-zinc-100 dark:bg-zinc-800 p-2 rounded text-sm font-mono break-words my-2 text-zinc-200 whitespace-pre-wrap">
+                            <code>
+                              {JSON.stringify(toolInvocation.result, null, 2)}
+                            </code>
+                          </pre>
+                        </div>
+                      )}
+                    </Accordion>
+                  );
                 }
                 return null;
               })}
