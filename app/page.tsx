@@ -2,64 +2,17 @@
 
 import { useChat } from '@ai-sdk/react';
 import ChatInput from '@/components/ChatInput';
-import IndividualMessage from '@/components/IndividualMessage';
+import MessagesList from '@/components/MessagesList';
 
 export default function Chat() {
-  const { messages, append } = useChat();
+  const { messages, append, status } = useChat();
+
   return (
-    <div className="flex flex-col w-full max-w-md py-24 mx-auto stretch">
-      {messages.flatMap(message =>
-        message.parts.map((part, i) => {
-          if (part.type === 'text') {
-            return (
-              <IndividualMessage
-                key={`${message.id}-${i}`}
-                message={{ role: message.role as 'user' | 'assistant', content: part.text }}
-              />
-            );
-          }
-
-          if (part.type === 'tool-invocation') {
-            const { toolInvocation } = part;
-            const key = `${message.id}-${i}`;
-
-            // Render different states of the tool invocation
-            if (
-              toolInvocation.state === 'partial-call' ||
-              toolInvocation.state === 'call'
-            ) {
-              return (
-                <div
-                  key={key}
-                  className="bg-zinc-100 dark:bg-zinc-800 p-2 rounded text-sm font-mono break-words mb-4"
-                >
-                  <span className="font-semibold">🔧 Tool&nbsp;{toolInvocation.toolName}</span>
-                  {': '}
-                  <code>{JSON.stringify(toolInvocation.args, null, 2)}</code>
-                </div>
-              );
-            }
-
-            if (toolInvocation.state === 'result') {
-              return (
-                <div
-                  key={key}
-                  className="bg-green-50 dark:bg-green-900 p-2 rounded text-sm font-mono break-words mb-4"
-                >
-                  <span className="font-semibold">✅ {toolInvocation.toolName}&nbsp;result</span>
-                  {': '}
-                  <code>{JSON.stringify(toolInvocation.result, null, 2)}</code>
-                </div>
-              );
-            }
-          }
-
-          return null;
-        }),
-      )}
+    <div className="flex flex-col w-full max-w-2xl py-24 mx-auto stretch">
+      <MessagesList messages={messages} status={status} />
 
       {/* Chat input fixed at the bottom */}
-      <div className="fixed bottom-0 w-full max-w-md mb-8">
+      <div className="fixed bottom-0 w-full max-w-2xl mb-8">
         <ChatInput
           onSend={message =>
             append({ role: 'user', content: message }).catch(console.error)
