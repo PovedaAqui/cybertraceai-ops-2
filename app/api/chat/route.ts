@@ -31,7 +31,9 @@ const model = openrouter('anthropic/claude-3-7-sonnet');
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
-  const { messages, id: chatId } = await req.json();
+  const body = await req.json();
+  console.log('Chat API request body:', body);
+  const { messages, id: chatId } = body;
 
   try {
     // Temporary: Skip authentication for development
@@ -49,15 +51,16 @@ export async function POST(req: Request) {
       const newChat = await createChat(userId, 'New Chat');
       currentChatId = newChat.id;
     } else {
-      // Verify chat ownership - only if chatId looks like a UUID
+      // Check if chatId is a valid UUID (database format)
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       if (uuidRegex.test(currentChatId)) {
+        // It's a UUID, verify chat ownership
         const chat = await getChatById(currentChatId, userId);
         if (!chat || chat.userId !== userId) {
           return new Response('Chat not found', { status: 404 });
         }
       } else {
-        // Invalid chat ID format, create new chat
+        // It's a non-UUID ID (from AI SDK), create new chat
         const newChat = await createChat(userId, 'New Chat');
         currentChatId = newChat.id;
       }

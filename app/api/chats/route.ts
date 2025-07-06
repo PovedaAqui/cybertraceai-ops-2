@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
   try {
     // Temporary: Skip authentication for development
     // TODO: Fix Auth0 compatibility with Next.js 15
-    const userId = '550e8400-e29b-41d4-a716-446655440000'; // Valid UUID format
+    const userId = '550e8400-e29b-41d4-a716-446615440000'; // Valid UUID format
     const userEmail = 'temp@example.com';
     const body = await request.json();
     const { title } = body;
