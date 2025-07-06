@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@ai-sdk/react": "^1.2.12",
+    "@auth0/nextjs-auth0": "^4.8.0",
     "@openrouter/ai-sdk-provider": "^0.7.2",
     "@radix-ui/react-dropdown-menu": "^2.1.15",
     "@radix-ui/react-slot": "^1.2.3",
