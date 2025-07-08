@@ -7,22 +7,22 @@ import { SYSTEM_PROMPT } from '@/lib/ai/prompts';
 import { getOrCreateUser, saveMessage, getChatById, createChat } from '@/lib/db/queries';
 
 const openrouter = createOpenRouter({
-    apiKey: process.env.OPENROUTER_API_KEY,
-    extraBody: {
-        provider: {
-            order: ['Amazon Bedrock', 'Azure'],
-            sort: 'latency',
-        },
-        models: ['anthropic/claude-3.5-sonnet', 'openai/gpt-4o'],
-        data_collection: {
-            enabled: false,
-        },
-        temperature: 0.0,
-        top_p: 0.9,
-        frequency_penalty: 0.0,
-        presence_penalty: 0.0,
+  apiKey: process.env.OPENROUTER_API_KEY,
+  extraBody: {
+    provider: {
+      order: ['Amazon Bedrock', 'Azure'],
+      sort: 'latency',
     },
-});  
+    models: ['anthropic/claude-3.5-sonnet', 'openai/gpt-4o'],
+    data_collection: {
+      enabled: false,
+    },
+    temperature: 0.0,
+    top_p: 0.9,
+    frequency_penalty: 0.0,
+    presence_penalty: 0.0,
+  },
+});
 
 const model = openrouter('anthropic/claude-3-7-sonnet');
 
@@ -39,7 +39,7 @@ export async function POST(req: Request) {
     // TODO: Fix Auth0 compatibility with Next.js 15
     const userId = '550e8400-e29b-41d4-a716-446655440000'; // Valid UUID format
     const userEmail = 'temp@example.com';
-    
+
     // Ensure user exists in database
     await getOrCreateUser(userId, userEmail);
 
@@ -95,7 +95,7 @@ export async function POST(req: Request) {
             ],
           }),
         });
-        
+
         // Get tools from MCP server
         const mcpTools = await mcpClient.tools();
         tools = { ...mcpTools, ...tools };
@@ -117,7 +117,7 @@ export async function POST(req: Request) {
           if (mcpClient) {
             await mcpClient.close().catch(console.error);
           }
-          
+
           // Save assistant message
           if (event.finishReason === 'stop' || event.finishReason === 'length') {
             // Build the assistant message from the response
@@ -126,11 +126,11 @@ export async function POST(req: Request) {
               role: 'assistant' as const,
               content: event.text || '',
               parts: event.toolCalls?.length ? [
-                ...(event.text ? [{ type: 'text', text: event.text }] : []),
+                ...(event.text ? [{ type: 'text' as const, text: event.text }] : []),
                 ...event.toolCalls.map(call => ({
-                  type: 'tool-invocation',
+                  type: 'tool-invocation' as const,
                   toolInvocation: {
-                    state: 'result',
+                    state: 'result' as const,
                     toolName: call.toolName,
                     toolCallId: call.toolCallId,
                     args: call.args,
