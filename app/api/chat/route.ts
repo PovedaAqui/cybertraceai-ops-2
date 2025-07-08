@@ -2,7 +2,6 @@ import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { streamText, experimental_createMCPClient as createMCPClient } from 'ai';
 import { Experimental_StdioMCPTransport as StdioMCPTransport } from 'ai/mcp-stdio';
 import { auth0 } from '@/lib/auth0';
-import path from 'path';
 import { humanizeTimestampTool } from '@/lib/ai/tools/humanize-timestamp';
 import { SYSTEM_PROMPT } from '@/lib/ai/prompts';
 import { getOrCreateUser, saveMessage, getChatById, createChat } from '@/lib/db/queries';
@@ -82,14 +81,18 @@ export async function POST(req: Request) {
 
     // Try to initialize MCP client, but don't fail if it's not available
     try {
-      const serverPath = process.env.SUZIEQ_MCP_SERVER_PATH;
-      if (serverPath) {
-        const serverDir = path.dirname(serverPath);
+      const apiEndpoint = process.env.SUZIEQ_API_ENDPOINT;
+      const apiKey = process.env.SUZIEQ_API_KEY;
+      if (apiEndpoint && apiKey) {
         mcpClient = await createMCPClient({
           transport: new StdioMCPTransport({
-            command: 'uv',
-            args: ['run', 'python', serverPath],
-            cwd: serverDir,
+            command: 'docker',
+            args: [
+              'run', '-i', '--rm',
+              '-e', 'SUZIEQ_API_ENDPOINT',
+              '-e', 'SUZIEQ_API_KEY',
+              'mcp/suzieq-mcp'
+            ],
           }),
         });
         
