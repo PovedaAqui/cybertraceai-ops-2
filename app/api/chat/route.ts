@@ -1,10 +1,12 @@
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { streamText, experimental_createMCPClient as createMCPClient } from 'ai';
 import { Experimental_StdioMCPTransport as StdioMCPTransport } from 'ai/mcp-stdio';
-import { auth0 } from '@/lib/auth0';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { humanizeTimestampTool } from '@/lib/ai/tools/humanize-timestamp';
 import { SYSTEM_PROMPT } from '@/lib/ai/prompts';
 import { getOrCreateUser, saveMessage, getChatById, createChat } from '@/lib/db/queries';
+import { NextResponse } from 'next/server';
 
 const openrouter = createOpenRouter({
   apiKey: process.env.OPENROUTER_API_KEY,
@@ -30,15 +32,23 @@ const model = openrouter('anthropic/claude-3-7-sonnet');
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
+  console.log('🚀 POST /api/chat called');
   const body = await req.json();
-  console.log('Chat API request body:', body);
+  console.log('📥 Chat API request body:', JSON.stringify(body, null, 2));
   const { messages, id: chatId } = body;
+  console.log('💬 Messages count:', messages?.length, 'ChatId:', chatId);
 
   try {
-    // Temporary: Skip authentication for development
-    // TODO: Fix Auth0 compatibility with Next.js 15
-    const userId = '550e8400-e29b-41d4-a716-446655440000'; // Valid UUID format
-    const userEmail = 'temp@example.com';
+    const session = await getServerSession(authOptions);
+    console.log('🔐 Session status:', session ? 'authenticated' : 'not authenticated');
+    
+    if (!session?.user) {
+      console.log('❌ Unauthorized - no session or user');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
+    const userId = session.user.id!;
+    const userEmail = session.user.email!;
 
     // Ensure user exists in database
     await getOrCreateUser(userId, userEmail);
@@ -77,7 +87,7 @@ export async function POST(req: Request) {
     }
 
     let tools = { humanize_timestamp_tool: humanizeTimestampTool };
-    let mcpClient: any = null;
+    let mcpClient: Awaited<ReturnType<typeof createMCPClient>> | null = null;
 
     // Try to initialize MCP client, but don't fail if it's not available
     try {
@@ -105,6 +115,9 @@ export async function POST(req: Request) {
       // Continue without MCP tools
     }
 
+    console.log('🤖 Starting streamText with model:', model);
+    console.log('🛠️ Available tools:', Object.keys(tools));
+    
     const result = streamText({
       model,
       messages,
@@ -112,6 +125,7 @@ export async function POST(req: Request) {
       tools,
       maxSteps: 5,
       onFinish: async (event) => {
+        console.log('🏁 onFinish called with reason:', event.finishReason);
         try {
           // Close the MCP client if it was initialized
           if (mcpClient) {
@@ -120,6 +134,7 @@ export async function POST(req: Request) {
 
           // Save assistant message
           if (event.finishReason === 'stop' || event.finishReason === 'length') {
+            console.log('💾 Saving assistant message...');
             // Build the assistant message from the response
             const assistantMessage = {
               id: crypto.randomUUID(),
@@ -143,21 +158,28 @@ export async function POST(req: Request) {
             };
 
             await saveMessage(assistantMessage).catch(console.error);
+            console.log('✅ Assistant message saved successfully');
           }
         } catch (error) {
-          console.error('Error in onFinish:', error);
+          console.error('❌ Error in onFinish:', error);
         }
       },
     });
 
     // Try different streaming response methods in order of preference
+    console.log('📤 Attempting to return streaming response...');
     try {
+      console.log('✅ Using toDataStreamResponse');
       return result.toDataStreamResponse();
-    } catch (error1) {
+    } catch (e) {
+      console.log('❌ toDataStreamResponse failed:', e);
       try {
+        console.log('✅ Using toTextStreamResponse');
         return result.toTextStreamResponse();
-      } catch (error2) {
+      } catch (e2) {
+        console.log('❌ toTextStreamResponse failed:', e2);
         try {
+          console.log('✅ Using toDataStream with Response');
           return new Response(result.toDataStream(), {
             headers: {
               'Content-Type': 'application/json',
@@ -165,7 +187,9 @@ export async function POST(req: Request) {
               'Connection': 'keep-alive',
             },
           });
-        } catch (error3) {
+        } catch (e3) {
+          console.log('❌ toDataStream failed:', e3);
+          console.log('✅ Using textStream fallback');
           return new Response(result.textStream, {
             headers: {
               'Content-Type': 'text/plain; charset=utf-8',

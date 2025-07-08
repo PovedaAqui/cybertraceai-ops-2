@@ -1,13 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth0 } from '@/lib/auth0';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { getChatsByUser, createChat, getOrCreateUser } from '@/lib/db/queries';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    // Temporary: Skip authentication for development
-    // TODO: Fix Auth0 compatibility with Next.js 15
-    const userId = '550e8400-e29b-41d4-a716-446655440000'; // Valid UUID format
-    const userEmail = 'temp@example.com';
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
+    const userId = session.user.id!;
+    const userEmail = session.user.email!;
     
     // Ensure user exists in database
     await getOrCreateUser(userId, userEmail);
@@ -23,10 +28,14 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    // Temporary: Skip authentication for development
-    // TODO: Fix Auth0 compatibility with Next.js 15
-    const userId = '550e8400-e29b-41d4-a716-446615440000'; // Valid UUID format
-    const userEmail = 'temp@example.com';
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
+    const userId = session.user.id!;
+    const userEmail = session.user.email!;
     const body = await request.json();
     const { title } = body;
 

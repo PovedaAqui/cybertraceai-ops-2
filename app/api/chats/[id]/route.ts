@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth0 } from '@/lib/auth0';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { getChatById, getChatMessages, updateChatTitle, deleteChat } from '@/lib/db/queries';
 
 export async function GET(
@@ -7,9 +8,13 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    // Temporary: Skip authentication for development
-    // TODO: Fix Auth0 compatibility with Next.js 15
-    const userId = '550e8400-e29b-41d4-a716-446655440000'; // Valid UUID format
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
+    const userId = session.user.id!;
     const chatId = params.id;
 
     // Get chat and verify ownership
@@ -37,9 +42,13 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    // Temporary: Skip authentication for development
-    // TODO: Fix Auth0 compatibility with Next.js 15
-    const userId = '550e8400-e29b-41d4-a716-446655440000'; // Valid UUID format
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
+    const userId = session.user.id!;
     const chatId = params.id;
     const body = await request.json();
     const { title } = body;
@@ -64,9 +73,13 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    // Temporary: Skip authentication for development
-    // TODO: Fix Auth0 compatibility with Next.js 15
-    const userId = '550e8400-e29b-41d4-a716-446655440000'; // Valid UUID format
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
+    const userId = session.user.id!;
     const chatId = params.id;
 
     // Verify chat ownership
