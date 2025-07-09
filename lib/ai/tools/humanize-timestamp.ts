@@ -62,7 +62,7 @@ export const humanizeTimestampTool = tool({
     timestamp_ms: z.number({ description: 'The UNIX epoch timestamp in milliseconds.' }),
     tz: z.string({ description: 'The target timezone (e.g., "America/New_York").' }).default('UTC'),
   }),
-  // eslint-disable-next-line @typescript-eslint/require-await
+   
   execute: async ({ timestamp_ms, tz = 'UTC' }) => humanizeTimestamp(timestamp_ms, tz),
 });
 

@@ -4,6 +4,7 @@ import { GeistMono } from "geist/font/mono";
 import "./globals.css";
 import { Toaster } from 'sonner';
 import { SessionProvider } from "@/components/providers/session-provider";
+import { ThemeProvider } from "@/components/providers/theme-provider";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -19,7 +20,9 @@ export default function RootLayout({
     <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
       <body className="antialiased">
         <SessionProvider>
-          {children}
+          <ThemeProvider>
+            {children}
+          </ThemeProvider>
         </SessionProvider>
         <Toaster />
       </body>

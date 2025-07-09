@@ -6,7 +6,6 @@ import Greeting from './Greeting';
 import IndividualMessage from './IndividualMessage';
 import ThinkingMessage from './ThinkingMessage';
 import Accordion from './Accordion';
-import { Wrench } from 'lucide-react';
 
 type MessagesListProps = {
   messages: Readonly<Message[]>;

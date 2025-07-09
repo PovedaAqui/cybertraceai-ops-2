@@ -5,7 +5,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { humanizeTimestampTool } from '@/lib/ai/tools/humanize-timestamp';
 import { SYSTEM_PROMPT } from '@/lib/ai/prompts';
-import { getOrCreateUser, saveMessage, getChatById, createChat } from '@/lib/db/queries';
+import { getOrCreateUser, saveMessage, getChatById, createChat, updateChatTitle } from '@/lib/db/queries';
+import { generateChatTitle, shouldUpdateTitle } from '@/lib/utils/chat-title';
 import { NextResponse } from 'next/server';
 
 const openrouter = createOpenRouter({
@@ -84,6 +85,14 @@ export async function POST(req: Request) {
         id: userMessage.id || crypto.randomUUID(),
         createdAt: userMessage.createdAt || new Date(),
       });
+
+      // Update chat title if this is the first message and title is generic
+      const chat = await getChatById(currentChatId, userId);
+      if (chat && shouldUpdateTitle(chat.title)) {
+        const newTitle = generateChatTitle(userMessage.content);
+        await updateChatTitle(currentChatId, newTitle, userId);
+        console.log(`📝 Updated chat title from "${chat.title}" to "${newTitle}"`);
+      }
     }
 
     let tools = { humanize_timestamp_tool: humanizeTimestampTool };
