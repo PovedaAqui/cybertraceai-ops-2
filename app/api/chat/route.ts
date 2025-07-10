@@ -108,8 +108,8 @@ export async function POST(req: Request) {
             command: 'docker',
             args: [
               'run', '-i', '--rm',
-              '-e', 'SUZIEQ_API_ENDPOINT',
-              '-e', 'SUZIEQ_API_KEY',
+              '-e', `SUZIEQ_API_ENDPOINT=${apiEndpoint}`,
+              '-e', `SUZIEQ_API_KEY=${apiKey}`,
               'mcp/suzieq-mcp'
             ],
           }),
