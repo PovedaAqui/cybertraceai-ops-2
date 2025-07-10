@@ -10,6 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `pnpm build` - Build production version
 - `pnpm start` - Start production server
 - `pnpm lint` - Run ESLint
+- When running `pnpm run dev`, always use `--port 3002`, or `--port 3003` if the 3002 is busy
 
 ### Database Operations
 
