@@ -48,13 +48,14 @@ export async function getUser(email: string) {
 }
 
 // Example: Create a new user
-export async function createUser(email: string, passwordHash: string) {
+export async function createUser(email: string, name?: string) {
   try {
     return await db
       .insert(schema.User)
       .values({
+        id: crypto.randomUUID(),
         email,
-        password: passwordHash,
+        name,
       })
       .returning({ id: schema.User.id, email: schema.User.email });
   } catch (error) {
@@ -109,7 +110,7 @@ export async function getChatsByUser(userId: string) {
 }
 
 // Get a specific chat by ID
-export async function getChatById(chatId: string, userId: string) {
+export async function getChatById(chatId: string) {
   try {
     return await db.query.Chat.findFirst({
       where: eq(schema.Chat.id, chatId),
@@ -133,8 +134,8 @@ export async function getChatMessages(chatId: string): Promise<Message[]> {
       id: msg.id,
       role: msg.role as 'user' | 'assistant' | 'system',
       content: msg.content || '',
-      parts: msg.parts as any,
-      createdAt: msg.createdAt,
+      parts: msg.parts as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+      createdAt: msg.createdAt || undefined,
     }));
   } catch (error) {
     console.error('Failed to get chat messages:', error);
@@ -163,7 +164,7 @@ export async function saveMessage(message: Message & { chatId: string }) {
 }
 
 // Update chat title
-export async function updateChatTitle(chatId: string, title: string, userId: string) {
+export async function updateChatTitle(chatId: string, title: string) {
   try {
     return await db
       .update(schema.Chat)
@@ -177,7 +178,7 @@ export async function updateChatTitle(chatId: string, title: string, userId: str
 }
 
 // Delete a chat and its messages
-export async function deleteChat(chatId: string, userId: string) {
+export async function deleteChat(chatId: string) {
   try {
     // Delete messages first
     await db.delete(schema.Message).where(eq(schema.Message.chatId, chatId));

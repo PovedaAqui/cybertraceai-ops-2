@@ -12,9 +12,8 @@ async function updateChatTitles() {
   console.log('🔍 Finding chats with generic titles...');
   
   try {
-    // Find all chats with generic titles
+    // Find all chats
     const chatsToUpdate = await db.query.Chat.findMany({
-      where: schema.Chat.title,
       with: {
         messages: {
           orderBy: schema.Message.createdAt,
@@ -32,7 +31,7 @@ async function updateChatTitles() {
       // Check if title should be updated
       if (shouldUpdateTitle(chat.title)) {
         // Get first user message
-        const firstUserMessage = chat.messages.find(m => m.role === 'user');
+        const firstUserMessage = chat.messages.find((m: any) => m.role === 'user');
         
         if (firstUserMessage && firstUserMessage.content) {
           const newTitle = generateChatTitle(firstUserMessage.content);

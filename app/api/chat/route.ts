@@ -66,7 +66,7 @@ export async function POST(req: Request) {
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       if (uuidRegex.test(currentChatId)) {
         // It's a UUID, verify chat ownership
-        const chat = await getChatById(currentChatId, userId);
+        const chat = await getChatById(currentChatId);
         if (!chat || chat.userId !== userId) {
           return new Response('Chat not found', { status: 404 });
         }
@@ -88,10 +88,10 @@ export async function POST(req: Request) {
       });
 
       // Update chat title if this is the first message and title is generic
-      const chat = await getChatById(currentChatId, userId);
+      const chat = await getChatById(currentChatId);
       if (chat && shouldUpdateTitle(chat.title)) {
         const newTitle = generateChatTitle(userMessage.content);
-        await updateChatTitle(currentChatId, newTitle, userId);
+        await updateChatTitle(currentChatId, newTitle);
         console.log(`📝 Updated chat title from "${chat.title}" to "${newTitle}"`);
       }
     }

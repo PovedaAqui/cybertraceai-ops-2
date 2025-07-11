@@ -36,13 +36,16 @@ export function TableDisplay({ data, className }: TableDisplayProps) {
       case 'boolean':
         return value ? '✓' : '✗';
       case 'number':
-        return typeof value === 'number' ? value.toLocaleString() : value;
+        return typeof value === 'number' ? value.toLocaleString() : String(value);
       case 'date':
         try {
-          const date = new Date(value);
-          return isNaN(date.getTime()) ? value : date.toLocaleDateString();
+          if (typeof value === 'string' || typeof value === 'number' || value instanceof Date) {
+            const date = new Date(value);
+            return isNaN(date.getTime()) ? String(value) : date.toLocaleDateString();
+          }
+          return String(value);
         } catch {
-          return value;
+          return String(value);
         }
       default:
         return String(value);

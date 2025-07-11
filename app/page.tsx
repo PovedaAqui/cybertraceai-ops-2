@@ -93,7 +93,7 @@ export default function Chat() {
   if (!session) {
     return (
       <div className="flex flex-col justify-center items-center h-screen max-w-md mx-auto">
-        <h1 className="text-2xl font-bold mb-4">Welcome to CyberTrace AI</h1>
+        <h1 className="text-2xl font-bold mb-4">Welcome to CybertraceAI</h1>
         <p className="text-gray-600 mb-8 text-center">
           Please sign in to start chatting with our AI assistant.
         </p>

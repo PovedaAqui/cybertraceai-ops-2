@@ -43,7 +43,7 @@ export function generateChatTitle(message: string): string {
  * @param title The current chat title
  * @returns true if the title should be updated
  */
-export function shouldUpdateTitle(title: string): boolean {
+export function shouldUpdateTitle(title: string | null): boolean {
   const genericTitles = [
     "New Chat",
     "new chat",

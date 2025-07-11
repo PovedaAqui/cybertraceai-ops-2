@@ -5,7 +5,7 @@ import { getChatById, getChatMessages, updateChatTitle, deleteChat } from '@/lib
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -15,10 +15,10 @@ export async function GET(
     }
     
     const userId = session.user.id!;
-    const chatId = params.id;
+    const { id: chatId } = await params;
 
     // Get chat and verify ownership
-    const chat = await getChatById(chatId, userId);
+    const chat = await getChatById(chatId);
     
     if (!chat || chat.userId !== userId) {
       return NextResponse.json({ error: 'Chat not found' }, { status: 404 });
@@ -39,7 +39,7 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -49,17 +49,17 @@ export async function PATCH(
     }
     
     const userId = session.user.id!;
-    const chatId = params.id;
+    const { id: chatId } = await params;
     const body = await request.json();
     const { title } = body;
 
     // Verify chat ownership
-    const chat = await getChatById(chatId, userId);
+    const chat = await getChatById(chatId);
     if (!chat || chat.userId !== userId) {
       return NextResponse.json({ error: 'Chat not found' }, { status: 404 });
     }
 
-    const updatedChat = await updateChatTitle(chatId, title, userId);
+    const updatedChat = await updateChatTitle(chatId, title);
     
     return NextResponse.json(updatedChat[0]);
   } catch (error) {
@@ -70,7 +70,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -80,15 +80,15 @@ export async function DELETE(
     }
     
     const userId = session.user.id!;
-    const chatId = params.id;
+    const { id: chatId } = await params;
 
     // Verify chat ownership
-    const chat = await getChatById(chatId, userId);
+    const chat = await getChatById(chatId);
     if (!chat || chat.userId !== userId) {
       return NextResponse.json({ error: 'Chat not found' }, { status: 404 });
     }
 
-    await deleteChat(chatId, userId);
+    await deleteChat(chatId);
     
     return NextResponse.json({ success: true });
   } catch (error) {
