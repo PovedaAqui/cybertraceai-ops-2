@@ -3,6 +3,7 @@
 import { getProviders, signIn } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface Provider {
   id: string;
@@ -21,20 +22,28 @@ export default function SignIn() {
   }, []);
 
   return (
-    <div className="flex flex-col justify-center items-center h-screen max-w-md mx-auto">
-      <h1 className="text-3xl font-bold mb-8">Sign In to CyberTrace AI</h1>
-      
-      {providers &&
-        Object.values(providers).map((provider) => (
-          <div key={provider.name} className="w-full mb-4">
-            <Button
-              onClick={() => signIn(provider.id)}
-              className="w-full"
-            >
-              Sign in with {provider.name}
-            </Button>
-          </div>
-        ))}
+    <div className="flex min-h-screen flex-col items-center justify-center bg-muted/40 p-4">
+      <Card className="w-full max-w-sm">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl font-bold">Sign In</CardTitle>
+          <CardDescription>
+            Welcome to CyberTrace AI
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {providers &&
+            Object.values(providers).map((provider) => (
+              <Button
+                key={provider.name}
+                onClick={() => signIn(provider.id)}
+                className="w-full"
+                size="lg"
+              >
+                Sign in with {provider.name}
+              </Button>
+            ))}
+        </CardContent>
+      </Card>
     </div>
   );
 }
