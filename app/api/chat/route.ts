@@ -4,6 +4,7 @@ import { Experimental_StdioMCPTransport as StdioMCPTransport } from 'ai/mcp-stdi
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { humanizeTimestampTool } from '@/lib/ai/tools/humanize-timestamp';
+import { tableTool } from '@/lib/ai/tools/table';
 import { SYSTEM_PROMPT } from '@/lib/ai/prompts';
 import { getOrCreateUser, saveMessage, getChatById, createChat, updateChatTitle } from '@/lib/db/queries';
 import { generateChatTitle, shouldUpdateTitle } from '@/lib/utils/chat-title';
@@ -95,7 +96,10 @@ export async function POST(req: Request) {
       }
     }
 
-    let tools = { humanize_timestamp_tool: humanizeTimestampTool };
+    let tools = { 
+      humanize_timestamp_tool: humanizeTimestampTool,
+      table_tool: tableTool 
+    };
     let mcpClient: Awaited<ReturnType<typeof createMCPClient>> | null = null;
 
     // Try to initialize MCP client, but don't fail if it's not available

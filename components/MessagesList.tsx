@@ -6,6 +6,7 @@ import Greeting from './Greeting';
 import IndividualMessage from './IndividualMessage';
 import ThinkingMessage from './ThinkingMessage';
 import Accordion from './Accordion';
+import { TableDisplay } from './ui/table-display';
 
 type MessagesListProps = {
   messages: Readonly<Message[]>;
@@ -76,6 +77,15 @@ export default function MessagesList({
                   const { toolInvocation } = part;
                   const toolName = toolInvocation.toolName;
                   const isResult = toolInvocation.state === 'result';
+
+                  // Special handling for table tool
+                  if (toolName === 'table_tool' && isResult && toolInvocation.result) {
+                    return (
+                      <div key={key} className="my-4">
+                        <TableDisplay data={toolInvocation.result} />
+                      </div>
+                    );
+                  }
 
                   return (
                     <Accordion
