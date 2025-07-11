@@ -97,7 +97,7 @@ export default function MessagesList({
                         <p className="font-semibold text-zinc-600 dark:text-zinc-400">
                           Parameters:
                         </p>
-                        <pre className="bg-zinc-100 dark:bg-zinc-800 p-2 rounded text-sm font-mono break-words my-2 text-zinc-200 whitespace-pre-wrap">
+                        <pre className="bg-zinc-100 dark:bg-zinc-800 p-2 rounded text-sm font-mono break-words my-2 text-zinc-800 dark:text-zinc-200 whitespace-pre-wrap">
                           <code>
                             {JSON.stringify(toolInvocation.args, null, 2)}
                           </code>
@@ -108,7 +108,7 @@ export default function MessagesList({
                           <p className="font-semibold text-zinc-600 dark:text-zinc-400">
                             Result:
                           </p>
-                          <pre className="bg-zinc-100 dark:bg-zinc-800 p-2 rounded text-sm font-mono break-words my-2 text-zinc-200 whitespace-pre-wrap">
+                          <pre className="bg-zinc-100 dark:bg-zinc-800 p-2 rounded text-sm font-mono break-words my-2 text-zinc-800 dark:text-zinc-200 whitespace-pre-wrap">
                             <code>
                               {JSON.stringify(toolInvocation.result, null, 2)}
                             </code>
