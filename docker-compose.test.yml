@@ -1,0 +1,89 @@
+version: '3.8'
+
+services:
+  # Test runner service
+  test-runner:
+    build:
+      context: ./tests
+      dockerfile: Dockerfile
+    container_name: cybertraceai-test-runner
+    environment:
+      - TEST_APP_URL=http://app:3000
+      - TEST_DB_URL=postgresql://postgres:${POSTGRES_PASSWORD:-cybertraceai2024}@database:5432/${POSTGRES_DB:-cybertraceai}
+      - TEST_MCP_URL=http://suzieq-mcp:8000
+      - NODE_ENV=test
+    depends_on:
+      app:
+        condition: service_healthy
+      database:
+        condition: service_healthy
+      suzieq-mcp:
+        condition: service_healthy
+    networks:
+      - cybertraceai_network
+    volumes:
+      - ./test-results:/app/test-results
+    command: ["npm", "test"]
+
+  # Application service (extends main compose)
+  app:
+    extends:
+      file: docker-compose.yml
+      service: app
+    environment:
+      - NODE_ENV=test
+      - POSTGRES_URL=postgresql://postgres:${POSTGRES_PASSWORD:-cybertraceai2024}@database:5432/${POSTGRES_DB:-cybertraceai_test}
+      - NEXTAUTH_URL=http://localhost:3000
+      - NEXTAUTH_SECRET=test-secret-for-testing-only
+      - SUZIEQ_API_ENDPOINT=http://suzieq-mcp:8000/api/v2
+      - SUZIEQ_API_KEY=${SUZIEQ_API_KEY:-suzieq-test-key}
+      # Override OpenRouter key for testing (optional)
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+    healthcheck:
+      test: ["CMD", "node", "healthcheck.js"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Database service (extends main compose but with test database)
+  database:
+    extends:
+      file: docker-compose.yml
+      service: database
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-cybertraceai_test}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-cybertraceai2024}
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+      - ./tests/init-test-db.sql:/docker-entrypoint-initdb.d/init-test-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-cybertraceai_test}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 20s
+
+  # SuzieQ MCP service (extends main compose)
+  suzieq-mcp:
+    extends:
+      file: docker-compose.yml
+      service: suzieq-mcp
+    environment:
+      - SUZIEQ_API_ENDPOINT=http://suzieq-mcp:8000/api/v2
+      - SUZIEQ_API_KEY=${SUZIEQ_API_KEY:-suzieq-test-key}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  postgres_test_data:
+    driver: local
+
+networks:
+  cybertraceai_network:
+    driver: bridge
