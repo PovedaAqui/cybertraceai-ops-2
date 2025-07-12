@@ -2,10 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: 'standalone',
-  experimental: {
-    outputFileTracingIncludes: {
-      '/': ['./lib/db/migrations/**/*']
-    }
+  outputFileTracingIncludes: {
+    '/': ['./lib/db/migrations/**/*']
   }
 };
 
