@@ -5,12 +5,31 @@ import * as schema from './schema';
 import { eq, desc } from 'drizzle-orm';
 import type { Message } from '@ai-sdk/react';
 
-export const client = postgres(process.env.POSTGRES_URL!);
-const db = drizzle(client, { schema });
+let _client: ReturnType<typeof postgres> | null = null;
+let _db: ReturnType<typeof drizzle<typeof schema>> | null = null;
+
+function getDbConnection(): { 
+  db: ReturnType<typeof drizzle<typeof schema>>; 
+  client: ReturnType<typeof postgres>; 
+} {
+  if (_db && _client) {
+    return { db: _db, client: _client };
+  }
+
+  if (!process.env.POSTGRES_URL) {
+    throw new Error('POSTGRES_URL environment variable is not set.');
+  }
+
+  _client = postgres(process.env.POSTGRES_URL);
+  _db = drizzle(_client, { schema });
+  
+  return { db: _db, client: _client };
+}
 
 // Get or create user by UUID
 export async function getOrCreateUser(userId: string, email: string) {
   try {
+    const { db } = getDbConnection();
     // First try to find existing user
     let user = await db.query.User.findFirst({
       where: eq(schema.User.id, userId),
@@ -38,6 +57,7 @@ export async function getOrCreateUser(userId: string, email: string) {
 // Get a user by email (legacy function)
 export async function getUser(email: string) {
   try {
+    const { db } = getDbConnection();
     return await db.query.User.findFirst({
       where: eq(schema.User.email, email),
     });
@@ -50,6 +70,7 @@ export async function getUser(email: string) {
 // Example: Create a new user
 export async function createUser(email: string, name?: string) {
   try {
+    const { db } = getDbConnection();
     return await db
       .insert(schema.User)
       .values({
@@ -72,6 +93,7 @@ export async function saveChat(newChat: {
   visibility?: 'public' | 'private';
 }) {
   try {
+    const { db } = getDbConnection();
     return await db.insert(schema.Chat).values(newChat).returning();
   } catch (error) {
     console.error('Failed to save chat:', error);
@@ -82,6 +104,7 @@ export async function saveChat(newChat: {
 // Create a new chat
 export async function createChat(userId: string, title?: string) {
   try {
+    const { db } = getDbConnection();
     const result = await db
       .insert(schema.Chat)
       .values({
@@ -99,6 +122,7 @@ export async function createChat(userId: string, title?: string) {
 // Get chats for a user
 export async function getChatsByUser(userId: string) {
   try {
+    const { db } = getDbConnection();
     return await db.query.Chat.findMany({
       where: eq(schema.Chat.userId, userId),
       orderBy: [desc(schema.Chat.createdAt)],
@@ -112,6 +136,7 @@ export async function getChatsByUser(userId: string) {
 // Get a specific chat by ID
 export async function getChatById(chatId: string) {
   try {
+    const { db } = getDbConnection();
     return await db.query.Chat.findFirst({
       where: eq(schema.Chat.id, chatId),
     });
@@ -124,6 +149,7 @@ export async function getChatById(chatId: string) {
 // Get messages for a chat
 export async function getChatMessages(chatId: string): Promise<Message[]> {
   try {
+    const { db } = getDbConnection();
     const messages = await db.query.Message.findMany({
       where: eq(schema.Message.chatId, chatId),
       orderBy: [desc(schema.Message.createdAt)],
@@ -146,6 +172,7 @@ export async function getChatMessages(chatId: string): Promise<Message[]> {
 // Save a single message
 export async function saveMessage(message: Message & { chatId: string }) {
   try {
+    const { db } = getDbConnection();
     return await db
       .insert(schema.Message)
       .values({
@@ -166,6 +193,7 @@ export async function saveMessage(message: Message & { chatId: string }) {
 // Update chat title
 export async function updateChatTitle(chatId: string, title: string) {
   try {
+    const { db } = getDbConnection();
     return await db
       .update(schema.Chat)
       .set({ title })
@@ -180,6 +208,7 @@ export async function updateChatTitle(chatId: string, title: string) {
 // Delete a chat and its messages
 export async function deleteChat(chatId: string) {
   try {
+    const { db } = getDbConnection();
     // Delete messages first
     await db.delete(schema.Message).where(eq(schema.Message.chatId, chatId));
     
@@ -199,6 +228,7 @@ type NewMessage = Omit<Message, 'id'> & { chatId: string };
 // Legacy function: Save messages to a chat
 export async function saveMessages(messages: NewMessage[]) {
   try {
+    const { db } = getDbConnection();
     const dbMessages = messages.map(msg => ({
       // Let database generate UUID for message ID
       chatId: msg.chatId,

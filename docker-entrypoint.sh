@@ -6,25 +6,16 @@ echo "🚀 Starting CyberTrace AI Docker Container..."
 # Function to wait for database to be ready
 wait_for_db() {
     echo "⏳ Waiting for database to be ready..."
-    max_attempts=30
+    max_attempts=15
     attempt=1
     
+    # Extract database host and port from POSTGRES_URL
+    db_host=$(echo "$POSTGRES_URL" | sed -n 's|.*@\([^:]*\):\([0-9]*\)/.*|\1|p')
+    db_port=$(echo "$POSTGRES_URL" | sed -n 's|.*@\([^:]*\):\([0-9]*\)/.*|\2|p')
+    
     while [ $attempt -le $max_attempts ]; do
-        if node -e "
-            const { Client } = require('pg');
-            const client = new Client({
-                connectionString: process.env.POSTGRES_URL
-            });
-            client.connect()
-                .then(() => {
-                    console.log('Database connection successful');
-                    client.end();
-                    process.exit(0);
-                })
-                .catch(() => {
-                    process.exit(1);
-                });
-        " 2>/dev/null; then
+        # Use nc (netcat) to test database connectivity
+        if nc -z "$db_host" "$db_port" 2>/dev/null; then
             echo "✅ Database is ready!"
             return 0
         fi
@@ -34,8 +25,9 @@ wait_for_db() {
         attempt=$((attempt + 1))
     done
     
-    echo "❌ Database failed to become ready after $max_attempts attempts"
-    exit 1
+    echo "⚠️ Database connectivity check timed out after $max_attempts attempts"
+    echo "ℹ️ Continuing anyway - the application will handle database connections"
+    return 0
 }
 
 # Function to run database migrations

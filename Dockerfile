@@ -3,7 +3,7 @@
 
 # Stage 1: Dependencies
 FROM node:18-alpine AS deps
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat netcat-openbsd
 WORKDIR /app
 
 # Install pnpm
@@ -37,6 +37,7 @@ RUN pnpm build
 
 # Stage 3: Runtime
 FROM node:18-alpine AS runner
+RUN apk add --no-cache netcat-openbsd
 WORKDIR /app
 
 # Create non-root user for security
