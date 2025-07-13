@@ -1,14 +1,16 @@
-version: '3.8'
-
 # Development overrides for docker-compose.yml
 # Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: deps  # Stop at deps stage for development
+    # Option 1: Use pre-built image for faster startup (recommended)
+    image: luispoveda93/cybertraceai:latest
+    
+    # Option 2: Build from source for development with hot reload
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
+    #   target: deps  # Stop at deps stage for development
     volumes:
       # Mount source code for hot reload
       - .:/app
@@ -31,8 +33,7 @@ services:
     depends_on:
       database:
         condition: service_healthy
-      suzieq-mcp:
-        condition: service_started  # Don't wait for MCP health in dev
+      # Note: SuzieQ MCP runs as dynamic containers, no service dependency needed
 
   database:
     environment:
@@ -54,20 +55,29 @@ services:
       retries: 3
       start_period: 15s
 
-  suzieq-mcp:
-    environment:
-      # Development MCP settings
-      - SUZIEQ_API_ENDPOINT=http://suzieq-mcp:8000/api/v2
-      - SUZIEQ_API_KEY=dev-suzieq-key-2024
-    # Expose MCP port for debugging (optional)
-    ports:
-      - "8000:8000"
-    healthcheck:
-      # More lenient health checks in development
-      interval: 30s
-      timeout: 10s
-      retries: 2
-      start_period: 20s
+  # SuzieQ MCP Integration Note:
+  # In development, SuzieQ MCP runs as dynamic Docker containers spawned by the app
+  # The app connects to an external SuzieQ REST API
+  # 
+  # To run SuzieQ locally for development:
+  # docker run -d -p 8000:8000 --name suzieq-api suzieq/suzieq:latest
+  # 
+  # suzieq-mcp:
+  #   image: mcp/suzieq-mcp:latest
+  #   container_name: cybertraceai-suzieq-dev
+  #   environment:
+  #     - SUZIEQ_API_ENDPOINT=http://suzieq-mcp:8000/api/v2
+  #     - SUZIEQ_API_KEY=dev-suzieq-key-2024
+  #   ports:
+  #     - "8000:8000"  # Expose MCP port for debugging
+  #   networks:
+  #     - cybertraceai_network
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 2
+  #     start_period: 20s
 
   # Development tools service (optional)
   dev-tools:

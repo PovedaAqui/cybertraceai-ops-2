@@ -9,6 +9,7 @@ import { SYSTEM_PROMPT } from '@/lib/ai/prompts';
 import { getOrCreateUser, saveMessage, getChatById, createChat, updateChatTitle } from '@/lib/db/queries';
 import { generateChatTitle, shouldUpdateTitle } from '@/lib/utils/chat-title';
 import { NextResponse } from 'next/server';
+import { execSync } from 'child_process';
 
 const openrouter = createOpenRouter({
   apiKey: process.env.OPENROUTER_API_KEY,
@@ -107,22 +108,68 @@ export async function POST(req: Request) {
       const apiEndpoint = process.env.SUZIEQ_API_ENDPOINT;
       const apiKey = process.env.SUZIEQ_API_KEY;
       if (apiEndpoint && apiKey) {
+        // Determine Docker network strategy based on environment
+        const dockerArgs = ['run', '-i', '--rm'];
+        
+        // Check if we have an explicit network configuration
+        const customNetwork = process.env.MCP_DOCKER_NETWORK;
+        
+        if (customNetwork === 'host') {
+          // Use host networking for local development
+          dockerArgs.push('--network', 'host');
+        } else if (customNetwork && customNetwork !== 'auto') {
+          // Use explicitly configured network
+          dockerArgs.push('--network', customNetwork);
+        } else {
+          // Auto-detect Docker Compose network or fallback to host networking
+          // Try Docker Compose generated network name first
+          try {
+            // Check if we're running in Docker by looking for container-specific files
+            
+            // Try to find the network with cybertraceai prefix
+            const networkList = execSync('docker network ls --format "{{.Name}}"', { 
+              encoding: 'utf8', 
+              timeout: 5000 
+            });
+            
+            const networks = networkList.split('\n').filter(Boolean);
+            const cybertraceNetwork = networks.find(net => 
+              net.includes('cybertraceai') && net.includes('network')
+            );
+            
+            if (cybertraceNetwork) {
+              console.log(`🌐 Using detected Docker network: ${cybertraceNetwork}`);
+              dockerArgs.push('--network', cybertraceNetwork);
+            } else {
+              console.log('🌐 No Docker Compose network found, using host networking');
+              dockerArgs.push('--network', 'host');
+            }
+          } catch (networkError) {
+            console.log('🌐 Network detection failed, using host networking:', networkError instanceof Error ? networkError.message : String(networkError));
+            dockerArgs.push('--network', 'host');
+          }
+        }
+        
+        // Add environment variables
+        dockerArgs.push(
+          '-e', `SUZIEQ_API_ENDPOINT=${apiEndpoint}`,
+          '-e', `SUZIEQ_API_KEY=${apiKey}`,
+          'mcp/suzieq-mcp'
+        );
+
+        console.log('🐳 MCP Docker command:', 'docker', dockerArgs.join(' '));
+
         mcpClient = await createMCPClient({
           transport: new StdioMCPTransport({
             command: 'docker',
-            args: [
-              'run', '-i', '--rm',
-              '--network', 'cybertraceai-ops-2_cybertraceai_network',
-              '-e', `SUZIEQ_API_ENDPOINT=${apiEndpoint}`,
-              '-e', `SUZIEQ_API_KEY=${apiKey}`,
-              'mcp/suzieq-mcp'
-            ],
+            args: dockerArgs,
           }),
         });
 
         // Get tools from MCP server
         const mcpTools = await mcpClient.tools();
         tools = { ...mcpTools, ...tools };
+        console.log('🛠️ SuzieQ MCP tools loaded:', Object.keys(mcpTools));
       }
     } catch (mcpError) {
       console.warn('MCP client initialization failed:', mcpError);

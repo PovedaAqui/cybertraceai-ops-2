@@ -1,8 +1,10 @@
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: luispoveda93/cybertraceai:latest
+    # Alternative: Build from source
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
     container_name: cybertraceai-app
     ports:
       - "3000:3000"

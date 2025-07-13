@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Test runner service
   test-runner:
@@ -10,35 +8,38 @@ services:
     environment:
       - TEST_APP_URL=http://app:3000
       - TEST_DB_URL=postgresql://postgres:${POSTGRES_PASSWORD:-cybertraceai2024}@database:5432/${POSTGRES_DB:-cybertraceai}
-      - TEST_MCP_URL=http://suzieq-mcp:8000
+      - TEST_MCP_URL=http://host.docker.internal:8000
       - NODE_ENV=test
     depends_on:
       app:
         condition: service_healthy
       database:
         condition: service_healthy
-      suzieq-mcp:
-        condition: service_healthy
+      # Note: SuzieQ MCP runs as dynamic containers, no service dependency needed
     networks:
       - cybertraceai_network
     volumes:
       - ./test-results:/app/test-results
     command: ["npm", "test"]
 
-  # Application service (extends main compose)
+  # Application service for testing
   app:
-    extends:
-      file: docker-compose.yml
-      service: app
+    image: luispoveda93/cybertraceai:latest
+    container_name: cybertraceai-app-test
     environment:
       - NODE_ENV=test
       - POSTGRES_URL=postgresql://postgres:${POSTGRES_PASSWORD:-cybertraceai2024}@database:5432/${POSTGRES_DB:-cybertraceai_test}
       - NEXTAUTH_URL=http://localhost:3000
       - NEXTAUTH_SECRET=test-secret-for-testing-only
-      - SUZIEQ_API_ENDPOINT=http://suzieq-mcp:8000/api/v2
+      - SUZIEQ_API_ENDPOINT=http://host.docker.internal:8000/api/v2
       - SUZIEQ_API_KEY=${SUZIEQ_API_KEY:-suzieq-test-key}
       # Override OpenRouter key for testing (optional)
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - cybertraceai_network
+    restart: "no"
     healthcheck:
       test: ["CMD", "node", "healthcheck.js"]
       interval: 10s
@@ -46,18 +47,21 @@ services:
       retries: 5
       start_period: 30s
 
-  # Database service (extends main compose but with test database)
+  # Database service for testing
   database:
-    extends:
-      file: docker-compose.yml
-      service: database
+    image: postgres:15-alpine
+    container_name: cybertraceai-db-test
     environment:
       - POSTGRES_DB=${POSTGRES_DB:-cybertraceai_test}
       - POSTGRES_USER=${POSTGRES_USER:-postgres}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-cybertraceai2024}
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
     volumes:
       - postgres_test_data:/var/lib/postgresql/data
       - ./tests/init-test-db.sql:/docker-entrypoint-initdb.d/init-test-db.sql:ro
+    networks:
+      - cybertraceai_network
+    restart: "no"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-cybertraceai_test}"]
       interval: 5s
@@ -65,20 +69,28 @@ services:
       retries: 5
       start_period: 20s
 
-  # SuzieQ MCP service (extends main compose)
-  suzieq-mcp:
-    extends:
-      file: docker-compose.yml
-      service: suzieq-mcp
-    environment:
-      - SUZIEQ_API_ENDPOINT=http://suzieq-mcp:8000/api/v2
-      - SUZIEQ_API_KEY=${SUZIEQ_API_KEY:-suzieq-test-key}
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 20s
+  # SuzieQ MCP Integration Note:
+  # For testing, SuzieQ MCP runs as dynamic Docker containers spawned by the app
+  # The app connects to an external SuzieQ REST API
+  # 
+  # To run SuzieQ for testing:
+  # docker run -d -p 8000:8000 --name suzieq-api-test suzieq/suzieq:latest
+  # 
+  # suzieq-mcp:
+  #   image: mcp/suzieq-mcp:latest
+  #   container_name: cybertraceai-suzieq-test
+  #   environment:
+  #     - SUZIEQ_API_ENDPOINT=http://suzieq-mcp:8000/api/v2
+  #     - SUZIEQ_API_KEY=${SUZIEQ_API_KEY:-suzieq-test-key}
+  #   networks:
+  #     - cybertraceai_network
+  #   restart: "no"
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 3
+  #     start_period: 20s
 
 volumes:
   postgres_test_data:
