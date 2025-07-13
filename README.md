@@ -536,7 +536,7 @@ For production deployment:
 
 ## 📄 License
 
-[Your License Here]
+Apache 2.0
 
 ## 📞 Support
 
@@ -549,6 +549,6 @@ For issues and questions:
 
 ## 🙏 Special Thanks
 
-## Special thanks to Dinesh G Dutt, Justin Pietschand, and the entire SuzieQ team and contributors for creating the powerful network observability engine that powers CybertraceAI-Ops. Check out the suzieq project at [github.com/netenglabs/suzieq](https://github.com/netenglabs/suzieq).
+Special thanks to Dinesh G Dutt, Justin Pietschand, and the entire SuzieQ team and contributors for creating the powerful network observability engine that powers CybertraceAI-Ops. Check out the suzieq project at [github.com/netenglabs/suzieq](https://github.com/netenglabs/suzieq).
 
 **🌟 CyberTraceAI-Ops - Asnwer wether simple or complex questions about your network using AI**
