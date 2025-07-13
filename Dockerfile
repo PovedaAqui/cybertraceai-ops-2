@@ -39,12 +39,14 @@ RUN pnpm build
 
 # Stage 3: Runtime
 FROM node:18-alpine AS runner
-RUN apk add --no-cache netcat-openbsd postgresql-client
+RUN apk add --no-cache netcat-openbsd postgresql-client docker-cli
 WORKDIR /app
 
 # Create non-root user for security
-RUN addgroup --system --gid 1001 nodejs
+RUN addgroup --system --gid 1002 nodejs
 RUN adduser --system --uid 1001 nextjs
+# Add nextjs user to docker group for Docker socket access (match host docker GID)
+RUN addgroup --gid 1001 docker && adduser nextjs docker
 
 # Set environment
 ENV NODE_ENV production

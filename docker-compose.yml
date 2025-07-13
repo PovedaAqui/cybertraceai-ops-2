@@ -14,8 +14,10 @@ services:
       - AUTH_GOOGLE_ID=${AUTH_GOOGLE_ID}
       - AUTH_GOOGLE_SECRET=${AUTH_GOOGLE_SECRET}
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
-      - SUZIEQ_API_ENDPOINT=${SUZIEQ_API_ENDPOINT:-}
-      - SUZIEQ_API_KEY=${SUZIEQ_API_KEY:-}
+      - SUZIEQ_API_ENDPOINT=${SUZIEQ_API_ENDPOINT:-http://host.docker.internal:8000/api/v2}
+      - SUZIEQ_API_KEY=${SUZIEQ_API_KEY:-496157e6e869ef7f3d6ecb24a6f6d847b224ee4f}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       database:
         condition: service_healthy
@@ -50,6 +52,14 @@ services:
       retries: 5
       start_period: 30s
 
+  # SuzieQ MCP Integration Note:
+  # SuzieQ MCP is handled via dynamic Docker containers spawned by the app
+  # The app connects to an external SuzieQ REST API running at host.docker.internal:8000
+  # No dedicated suzieq-mcp service is needed in this compose file
+  # 
+  # If you want to run SuzieQ locally, start it separately:
+  # docker run -d -p 8000:8000 --name suzieq-api suzieq/suzieq:latest
+  # 
   # suzieq-mcp:
   #   image: mcp/suzieq-mcp:latest
   #   container_name: cybertraceai-suzieq

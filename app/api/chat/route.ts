@@ -112,6 +112,7 @@ export async function POST(req: Request) {
             command: 'docker',
             args: [
               'run', '-i', '--rm',
+              '--network', 'cybertraceai-ops-2_cybertraceai_network',
               '-e', `SUZIEQ_API_ENDPOINT=${apiEndpoint}`,
               '-e', `SUZIEQ_API_KEY=${apiKey}`,
               'mcp/suzieq-mcp'

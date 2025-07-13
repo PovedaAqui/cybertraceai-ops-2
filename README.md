@@ -33,6 +33,10 @@ The fastest way to get CyberTrace AI up and running is using Docker Compose. Thi
    
    # Generate a secure secret (use a strong random string in production)
    NEXTAUTH_SECRET=your-super-secret-jwt-secret-here
+   
+   # Required for SuzieQ network observability (update endpoint and key as needed)
+   SUZIEQ_API_ENDPOINT=http://host.docker.internal:8000/api/v2
+   SUZIEQ_API_KEY=your_suzieq_api_key_here
    ```
 
 3. **Deploy with Docker**
@@ -80,8 +84,16 @@ This will check:
 ### Services
 
 - **🌐 CyberTrace AI App** (`app`): Next.js application with AI chat and network observability
+  - Includes Docker CLI for MCP container management
+  - Direct integration with SuzieQ REST API
+  - Real-time network device monitoring and analysis
 - **🗄️ PostgreSQL Database** (`database`): Stores chat history, user data, and sessions
-- **📊 SuzieQ MCP Server** (`suzieq-mcp`): Network observability and analysis tools
+  - Automatic schema migrations and table creation
+  - NextAuth.js session management with database strategy
+- **📊 SuzieQ MCP Integration**: Dynamic MCP containers for network observability
+  - Connects to external SuzieQ REST API at `host.docker.internal:8000`
+  - Provides network device discovery, interface monitoring, and BGP analysis
+  - Temporary container approach for secure, isolated tool execution
 
 ### Features
 
@@ -114,8 +126,28 @@ See `.env.example` for all available configuration options:
 - **Database**: Auto-configured for Docker deployment
 - **Authentication**: NextAuth.js with Google OAuth
 - **AI Integration**: OpenRouter API for Claude/GPT models
-- **SuzieQ MCP**: Network observability server
+- **SuzieQ MCP**: Network observability server connecting to external REST API
+- **Docker Integration**: Docker CLI mounted for MCP container management
 - **Optional**: Tavily API for web search
+
+#### Required Environment Variables
+
+```bash
+# Core Application
+NEXTAUTH_SECRET=your-secure-random-secret
+POSTGRES_URL=postgresql://postgres:password@database:5432/cybertraceai
+
+# Authentication
+AUTH_GOOGLE_ID=your_google_oauth_client_id
+AUTH_GOOGLE_SECRET=your_google_oauth_client_secret
+
+# AI Integration
+OPENROUTER_API_KEY=your_openrouter_api_key
+
+# SuzieQ Network Observability
+SUZIEQ_API_ENDPOINT=http://host.docker.internal:8000/api/v2
+SUZIEQ_API_KEY=your_suzieq_api_key
+```
 
 ### Manual Setup (Non-Docker)
 
@@ -273,6 +305,33 @@ docker compose logs database
    docker compose up -d
    ```
 
+6. **SuzieQ MCP connectivity issues**
+   ```bash
+   # Check if SuzieQ API is accessible from container
+   docker exec cybertraceai-app nc -z host.docker.internal 8000
+   
+   # Verify API key is correct
+   curl -H "Authorization: Bearer ${SUZIEQ_API_KEY}" http://host.docker.internal:8000/api/v2/device
+   ```
+
+7. **Docker permission denied errors**
+   ```bash
+   # Check Docker socket permissions
+   ls -la /var/run/docker.sock
+   
+   # If needed, adjust Docker group GID to match host
+   # Edit Dockerfile line 49 to match your system's docker GID
+   ```
+
+8. **MCP tools not responding**
+   ```bash
+   # Check application logs for MCP errors
+   docker compose logs app | grep -i mcp
+   
+   # Verify Docker CLI is available in container
+   docker exec cybertraceai-app docker --version
+   ```
+
 ### Reset Everything
 
 To completely reset the deployment:
@@ -289,6 +348,9 @@ docker compose up -d --build  # Rebuild and start
 - API keys are managed via environment variables
 - Internal service communication only
 - Health checks monitor security-relevant services
+- Docker socket access is restricted to nextjs user with proper group permissions
+- MCP containers run in isolated, temporary instances for security
+- SuzieQ API communication uses bearer token authentication
 
 ## 📈 Production Deployment
 
