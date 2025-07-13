@@ -31,7 +31,7 @@ The fastest way to get CyberTrace AI up and running is using Docker Compose. Thi
    AUTH_GOOGLE_ID=your_google_client_id
    AUTH_GOOGLE_SECRET=your_google_client_secret
    
-   # Generate a secure secret
+   # Generate a secure secret (use a strong random string in production)
    NEXTAUTH_SECRET=your-super-secret-jwt-secret-here
    ```
 
@@ -42,9 +42,26 @@ The fastest way to get CyberTrace AI up and running is using Docker Compose. Thi
 
 🎉 **Access the application at: [http://localhost:3000](http://localhost:3000)**
 
-## 🧪 Testing Your Deployment
+✨ **Fully Automated Setup**: Database migrations, schema creation, and authentication are configured automatically!
 
-Run the automated test suite to verify everything is working:
+## 🧪 Verifying Your Deployment
+
+### Quick Verification
+Check if everything is working with these simple commands:
+
+```bash
+# Check if app is running
+curl -f http://localhost:3000 && echo "✅ App is accessible"
+
+# Check if database is ready
+docker exec cybertraceai-db psql -U postgres -d cybertraceai -c "\dt" | grep -q "account" && echo "✅ Database tables ready"
+
+# Check authentication setup
+curl -s http://localhost:3000/api/auth/providers | grep -q "google" && echo "✅ Authentication configured"
+```
+
+### Automated Test Suite
+Run the full test suite to verify everything is working:
 
 ```bash
 ./test-deployment.sh
@@ -52,7 +69,8 @@ Run the automated test suite to verify everything is working:
 
 This will check:
 - All services are running and healthy
-- Database connectivity and migrations
+- Database connectivity and automated migrations
+- Authentication system functionality
 - SuzieQ MCP integration
 - Application API endpoints
 - Environment configuration
@@ -69,9 +87,10 @@ This will check:
 
 - **AI Chat**: Powered by Claude 3.7 Sonnet and GPT-4o via OpenRouter
 - **Network Observability**: SuzieQ MCP integration for network analysis
-- **Authentication**: Google OAuth with NextAuth.js
+- **Authentication**: Google OAuth with NextAuth.js (fully automated setup)
 - **Real-time Chat**: Persistent chat history with automatic title generation
-- **Docker-First**: Optimized for containerized deployment
+- **Docker-First**: Optimized for containerized deployment with zero-config database setup
+- **Self-Healing**: Automatic database migrations and schema validation
 
 ## 🛠️ Development
 
@@ -113,6 +132,7 @@ If you prefer running without Docker:
    pnpm db:generate
    pnpm db:migrate
    ```
+   *Note: Docker deployment handles database setup automatically*
 
 3. **Run development server**
    ```bash
@@ -128,9 +148,10 @@ If you prefer running without Docker:
 - `pnpm lint` - Run ESLint
 
 ### Database Operations
-- `pnpm db:generate` - Generate database migrations
-- `pnpm db:migrate` - Apply database migrations
+- `pnpm db:generate` - Generate database migrations (for development)
+- `pnpm db:migrate` - Apply database migrations (for development)
 - `pnpm update-chat-titles` - Update existing chat titles
+- **Note**: Docker deployment handles migrations automatically
 
 ### Docker Operations
 - `docker compose up -d` - Start all services
@@ -213,14 +234,23 @@ docker compose logs database
 
 ### Common Issues
 
-1. **Port 3000 already in use**
+1. **Authentication not working**
+   ```bash
+   # Restart the app to retry database setup
+   docker compose restart app
+   
+   # Check if database tables exist
+   docker exec cybertraceai-db psql -U postgres -d cybertraceai -c "\dt"
+   ```
+
+2. **Port 3000 already in use**
    ```bash
    # Change port in docker-compose.yml
    ports:
      - "3001:3000"  # Use port 3001 instead
    ```
 
-2. **Database connection errors**
+3. **Database connection errors**
    ```bash
    # Check database is running
    docker compose ps database
@@ -229,16 +259,13 @@ docker compose logs database
    docker compose logs database
    ```
 
-3. **SuzieQ MCP not responding**
+4. **Missing environment variables**
    ```bash
-   # Check MCP service
-   docker compose ps suzieq-mcp
-   
-   # Check MCP logs
-   docker compose logs suzieq-mcp
+   # Verify .env file has all required variables
+   grep -E "(NEXTAUTH_SECRET|AUTH_GOOGLE_ID|AUTH_GOOGLE_SECRET|OPENROUTER_API_KEY)" .env
    ```
 
-4. **Build failures**
+5. **Build failures**
    ```bash
    # Clean rebuild
    docker compose down

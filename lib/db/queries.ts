@@ -176,12 +176,13 @@ export async function saveMessage(message: Message & { chatId: string }) {
     return await db
       .insert(schema.Message)
       .values({
+        id: message.id, // Include the ID explicitly
         chatId: message.chatId,
         role: message.role,
         content: message.content,
         parts: message.parts,
         attachments: message.experimental_attachments || null,
-        // Let database handle createdAt with its default
+        createdAt: message.createdAt || new Date(),
       })
       .returning();
   } catch (error) {

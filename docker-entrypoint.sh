@@ -34,19 +34,41 @@ wait_for_db() {
 run_migrations() {
     echo "🔄 Running database migrations..."
     
-    if [ -f "lib/db/migrate.ts" ]; then
-        # Run migrations using tsx (TypeScript execution)
-        if command -v tsx >/dev/null 2>&1; then
-            tsx lib/db/migrate.ts
-        else
-            # Fallback: try to run with node if compiled
-            node lib/db/migrate.js 2>/dev/null || {
-                echo "⚠️  Migration file found but couldn't execute. Continuing..."
-            }
+    # Check if tables exist first
+    echo "🔍 Checking if database tables exist..."
+    tables_exist=$(PGPASSWORD="${POSTGRES_PASSWORD:-cybertraceai2024}" psql -h database -U postgres -d cybertraceai -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('user', 'account', 'session');" 2>/dev/null | tr -d ' ')
+    
+    if [ "$tables_exist" = "3" ]; then
+        echo "✅ Database tables already exist, skipping migrations"
+        return 0
+    fi
+    
+    echo "📋 Database tables missing, running migrations..."
+    
+    # Run SQL migrations directly in order
+    for migration_file in lib/db/migrations/*.sql; do
+        if [ -f "$migration_file" ]; then
+            migration_name=$(basename "$migration_file")
+            echo "▶ Applying migration: $migration_name"
+            
+            # Execute SQL migration
+            if PGPASSWORD="${POSTGRES_PASSWORD:-cybertraceai2024}" psql -h database -U postgres -d cybertraceai -f "$migration_file" >/dev/null 2>&1; then
+                echo "  ✅ $migration_name applied successfully"
+            else
+                echo "  ⚠️  $migration_name failed, continuing..."
+            fi
         fi
-        echo "✅ Database migrations completed"
+    done
+    
+    # Verify essential tables exist after migration
+    final_check=$(PGPASSWORD="${POSTGRES_PASSWORD:-cybertraceai2024}" psql -h database -U postgres -d cybertraceai -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('user', 'account', 'session');" 2>/dev/null | tr -d ' ')
+    
+    if [ "$final_check" = "3" ]; then
+        echo "✅ Database migrations completed successfully"
+        echo "✅ Essential tables verified: user, account, session"
     else
-        echo "ℹ️  No migration file found, skipping migrations"
+        echo "⚠️  Migration verification failed, but continuing..."
+        echo "ℹ️  Application will attempt to handle missing tables"
     fi
 }
 

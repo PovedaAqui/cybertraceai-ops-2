@@ -31,13 +31,15 @@ COPY . .
 # Set environment for build
 ENV NEXT_TELEMETRY_DISABLED 1
 ENV NODE_ENV production
+# Set dummy database URL for build time (will be overridden at runtime)
+ENV POSTGRES_URL postgresql://dummy:dummy@dummy:5432/dummy
 
 # Build the application with standalone output
 RUN pnpm build
 
 # Stage 3: Runtime
 FROM node:18-alpine AS runner
-RUN apk add --no-cache netcat-openbsd
+RUN apk add --no-cache netcat-openbsd postgresql-client
 WORKDIR /app
 
 # Create non-root user for security

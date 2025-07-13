@@ -5,6 +5,7 @@ import { getDb } from "./db";
 
 export function createAuthOptions(): NextAuthOptions {
   return {
+    secret: process.env.NEXTAUTH_SECRET,
     adapter: DrizzleAdapter(getDb()),
     providers: [
       GoogleProvider({
@@ -30,10 +31,5 @@ export function createAuthOptions(): NextAuthOptions {
   };
 }
 
-// For backward compatibility, create lazy authOptions
-export const authOptions: NextAuthOptions = new Proxy({} as NextAuthOptions, {
-  get(target, prop) {
-    const options = createAuthOptions();
-    return options[prop as keyof NextAuthOptions];
-  }
-});
+// Export authOptions directly to fix getServerSession compatibility
+export const authOptions: NextAuthOptions = createAuthOptions();
