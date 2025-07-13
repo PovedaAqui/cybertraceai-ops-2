@@ -1,7 +1,7 @@
 {
   "name": "cybertraceai-tests",
-  "version": "1.0.0",
-  "description": "Test suite for CyberTrace AI Docker deployment",
+  "version": "0.2.0",
+  "description": "Test suite for CyberTrace AI v0.2.0 Docker deployment with dynamic MCP integration",
   "main": "test-suite.js",
   "scripts": {
     "test": "node test-suite.js",

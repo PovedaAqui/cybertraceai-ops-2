@@ -13,8 +13,8 @@ APP_URL="http://localhost:3000"
 MAX_WAIT_TIME=120
 TEST_RESULTS_FILE="test-results.log"
 
-echo -e "${BLUE}🧪 CyberTrace AI Deployment Test Suite${NC}"
-echo "======================================"
+echo -e "${BLUE}🧪 CyberTrace AI v0.2.0 Deployment Test Suite${NC}"
+echo "=============================================="
 
 # Function to log messages
 log() {
@@ -96,24 +96,21 @@ test_database() {
     fi
 }
 
-# Function to test SuzieQ MCP service
+# Function to test SuzieQ MCP integration
 test_suzieq_mcp() {
-    log "${BLUE}Testing SuzieQ MCP service...${NC}"
+    log "${BLUE}Testing SuzieQ MCP integration...${NC}"
     
-    # Check if container is running
-    if ! docker ps --format "table {{.Names}}" | grep -q "cybertraceai-suzieq"; then
-        log "${RED}❌ SuzieQ MCP container is not running${NC}"
-        return 1
-    fi
+    # Test external SuzieQ API connectivity (if available)
+    # SuzieQ runs as dynamic containers spawned by the app, not as a dedicated service
+    local suzieq_endpoint="host.docker.internal:8000"
     
-    # Try to test the API endpoint (may not be exposed externally)
-    local mcp_status=$(docker exec cybertraceai-suzieq curl -f -s http://localhost:8000/health 2>/dev/null || echo "failed")
-    
-    if [ "$mcp_status" != "failed" ]; then
-        log "${GREEN}✅ SuzieQ MCP service is responding${NC}"
+    # Test if external SuzieQ API is accessible
+    if docker exec cybertraceai-app nc -z host.docker.internal 8000 2>/dev/null; then
+        log "${GREEN}✅ External SuzieQ API is accessible${NC}"
         return 0
     else
-        log "${YELLOW}⚠️  SuzieQ MCP health check inconclusive (may be normal)${NC}"
+        log "${YELLOW}⚠️  External SuzieQ API not accessible (may be normal if not running)${NC}"
+        log "${YELLOW}   SuzieQ MCP uses dynamic containers spawned by the app${NC}"
         return 0
     fi
 }
@@ -210,16 +207,14 @@ main() {
     # Test 1: Check if Docker Compose services are running
     total_tests=$((total_tests + 1))
     if check_service "CyberTrace AI App" "cybertraceai-app" && \
-       check_service "Database" "cybertraceai-db" && \
-       check_service "SuzieQ MCP" "cybertraceai-suzieq"; then
+       check_service "Database" "cybertraceai-db"; then
         passed_tests=$((passed_tests + 1))
     fi
     
     # Test 2: Check service health
     total_tests=$((total_tests + 1))
     if check_health "CyberTrace AI App" "cybertraceai-app" && \
-       check_health "Database" "cybertraceai-db" && \
-       check_health "SuzieQ MCP" "cybertraceai-suzieq"; then
+       check_health "Database" "cybertraceai-db"; then
         passed_tests=$((passed_tests + 1))
     fi
     
@@ -235,7 +230,7 @@ main() {
         passed_tests=$((passed_tests + 1))
     fi
     
-    # Test 5: Test SuzieQ MCP service
+    # Test 5: Test SuzieQ MCP integration
     total_tests=$((total_tests + 1))
     if test_suzieq_mcp; then
         passed_tests=$((passed_tests + 1))
