@@ -13,7 +13,7 @@ All API endpoints (except auth endpoints) require authentication via NextAuth.js
 
 ### Authentication Flow
 
-1. User visits `/auth/signin` 
+1. User visits `/auth/signin`
 2. Redirected to Google OAuth
 3. Session created with database strategy
 4. Subsequent API calls include session cookie
@@ -37,29 +37,34 @@ interface Session {
 ### Authentication Endpoints
 
 #### GET `/api/auth/signin`
+
 Google OAuth sign-in page.
 
 **Response**: HTML sign-in page
 
 #### GET `/api/auth/callback/google`
+
 OAuth callback handler.
 
 **Response**: Redirect to application
 
 #### GET `/api/auth/signout`
+
 Sign out current user.
 
 **Response**: Redirect to sign-in page
 
 #### GET `/api/auth/session`
+
 Get current session information.
 
 **Response**:
+
 ```json
 {
   "user": {
     "id": "user_123",
-    "name": "John Doe", 
+    "name": "John Doe",
     "email": "john@example.com",
     "image": "https://..."
   },
@@ -70,12 +75,15 @@ Get current session information.
 ### Chat Management
 
 #### GET `/api/chats`
+
 Get all chats for authenticated user.
 
 **Headers**:
+
 - `Cookie`: NextAuth session cookie
 
 **Response**:
+
 ```json
 {
   "chats": [
@@ -90,17 +98,21 @@ Get all chats for authenticated user.
 ```
 
 **Error Responses**:
+
 - `401`: Not authenticated
 - `500`: Server error
 
 #### POST `/api/chats`
+
 Create a new chat.
 
 **Headers**:
+
 - `Cookie`: NextAuth session cookie
 - `Content-Type`: application/json
 
 **Body**:
+
 ```json
 {
   "title": "New Chat Title"
@@ -108,6 +120,7 @@ Create a new chat.
 ```
 
 **Response**:
+
 ```json
 {
   "chat": {
@@ -120,15 +133,19 @@ Create a new chat.
 ```
 
 #### GET `/api/chats/[id]`
+
 Get specific chat with messages.
 
 **Parameters**:
+
 - `id` (path): Chat ID
 
 **Headers**:
+
 - `Cookie`: NextAuth session cookie
 
 **Response**:
+
 ```json
 {
   "chat": {
@@ -145,7 +162,7 @@ Get specific chat with messages.
       "createdAt": "2024-01-01T10:00:00.000Z"
     },
     {
-      "id": "msg_124", 
+      "id": "msg_124",
       "content": "Here are the network devices...",
       "role": "assistant",
       "createdAt": "2024-01-01T10:01:00.000Z",
@@ -163,22 +180,27 @@ Get specific chat with messages.
 ```
 
 **Error Responses**:
+
 - `401`: Not authenticated
 - `403`: Chat not owned by user
 - `404`: Chat not found
 - `500`: Server error
 
-#### PUT `/api/chats/[id]`
-Update chat title.
+#### PATCH `/api/chats/[id]`
+
+Update chat title (partial update).
 
 **Parameters**:
+
 - `id` (path): Chat ID
 
 **Headers**:
+
 - `Cookie`: NextAuth session cookie
 - `Content-Type`: application/json
 
 **Body**:
+
 ```json
 {
   "title": "Updated Chat Title"
@@ -186,6 +208,7 @@ Update chat title.
 ```
 
 **Response**:
+
 ```json
 {
   "chat": {
@@ -197,15 +220,19 @@ Update chat title.
 ```
 
 #### DELETE `/api/chats/[id]`
+
 Delete a chat and all its messages.
 
 **Parameters**:
+
 - `id` (path): Chat ID
 
 **Headers**:
+
 - `Cookie`: NextAuth session cookie
 
 **Response**:
+
 ```json
 {
   "success": true
@@ -215,13 +242,16 @@ Delete a chat and all its messages.
 ### Chat Conversation
 
 #### POST `/api/chat`
+
 Send message and get AI response with optional MCP tools.
 
 **Headers**:
+
 - `Cookie`: NextAuth session cookie
 - `Content-Type`: application/json
 
 **Body**:
+
 ```json
 {
   "messages": [
@@ -231,13 +261,14 @@ Send message and get AI response with optional MCP tools.
       "role": "user"
     }
   ],
-  "id": "chat_123"  // Optional: existing chat ID
+  "id": "chat_123" // Optional: existing chat ID
 }
 ```
 
 **Response**: Streaming response with Server-Sent Events
 
 **Stream Format**:
+
 ```
 data: {"type":"text","text":"Let me check the BGP sessions..."}
 
@@ -251,6 +282,7 @@ data: [DONE]
 ```
 
 **Error Responses**:
+
 - `401`: Not authenticated
 - `400`: Invalid message format
 - `500`: Server error
@@ -260,9 +292,11 @@ data: [DONE]
 ### Available Tools
 
 #### `run_suzieq_show`
+
 Execute SuzieQ show commands for network data retrieval.
 
 **Parameters**:
+
 ```typescript
 {
   table: string;     // Table name (device, interface, bgp, etc.)
@@ -274,6 +308,7 @@ Execute SuzieQ show commands for network data retrieval.
 ```
 
 **Example Usage**:
+
 ```json
 {
   "toolName": "run_suzieq_show",
@@ -286,9 +321,11 @@ Execute SuzieQ show commands for network data retrieval.
 ```
 
 #### `run_suzieq_summarize`
+
 Generate network summaries and insights.
 
 **Parameters**:
+
 ```typescript
 {
   table: string;     // Table to summarize
@@ -298,9 +335,10 @@ Generate network summaries and insights.
 ```
 
 **Example Usage**:
+
 ```json
 {
-  "toolName": "run_suzieq_summarize", 
+  "toolName": "run_suzieq_summarize",
   "args": {
     "table": "bgp",
     "namespace": "dual-evpn"
@@ -328,12 +366,14 @@ MCP tools connect to external SuzieQ REST API:
 #### SuzieQ API Examples
 
 **Get Devices**:
+
 ```bash
 curl -H "Authorization: Bearer $SUZIEQ_API_KEY" \
   "http://host.docker.internal:8000/api/v2/device"
 ```
 
 **Get BGP Sessions**:
+
 ```bash
 curl -H "Authorization: Bearer $SUZIEQ_API_KEY" \
   "http://host.docker.internal:8000/api/v2/bgp?view=summary"
@@ -413,7 +453,7 @@ interface Message {
   id: string;
   chatId: string;
   content: string;
-  role: 'user' | 'assistant' | 'system';
+  role: "user" | "assistant" | "system";
   createdAt: Date;
   toolInvocations?: ToolInvocation[];
 }
@@ -427,7 +467,7 @@ interface ToolInvocation {
   toolName: string;
   args: Record<string, any>;
   result?: any;
-  state: 'call' | 'result' | 'error';
+  state: "call" | "result" | "error";
 }
 ```
 
@@ -438,23 +478,23 @@ interface ToolInvocation {
 ```typescript
 // Send chat message
 async function sendMessage(content: string, chatId?: string) {
-  const response = await fetch('/api/chat', {
-    method: 'POST',
+  const response = await fetch("/api/chat", {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      messages: [{ id: generateId(), content, role: 'user' }],
-      id: chatId
-    })
+      messages: [{ id: generateId(), content, role: "user" }],
+      id: chatId,
+    }),
   });
-  
+
   return response.body; // ReadableStream for SSE
 }
 
 // Get chat history
 async function getChatHistory() {
-  const response = await fetch('/api/chats');
+  const response = await fetch("/api/chats");
   return response.json();
 }
 ```
@@ -475,7 +515,7 @@ def send_message(content, chat_id=None):
     }
     if chat_id:
         data["id"] = chat_id
-    
+
     response = session.post(
         "http://localhost:3000/api/chat",
         json=data,
