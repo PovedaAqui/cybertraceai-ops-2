@@ -1,200 +1,527 @@
 # Contributing to CyberTraceAI-Ops
 
-First off, thank you for considering contributing to CyberTraceAI-Ops! It's people like you that make open source such a great community. We welcome any and all contributions.
+Thank you for your interest in contributing to CyberTraceAI-Ops! We're excited to work with developers who want to improve network observability through AI. Whether you're fixing bugs, adding features, or improving documentation, your contributions make a real difference.
 
-## How to Contribute
+## 🎯 Types of Contributions
 
-The contribution workflow is straightforward:
+We welcome all types of contributions:
 
-1.  **Fork the repository** on GitHub.
-2.  **Create a feature branch** for your changes (`git checkout -b feature/my-new-feature`).
-3.  **Make your changes**.
-4.  **Test your changes** to ensure they don't break anything (`./test-deployment.sh`).
-5.  **Commit your changes** (`git commit -am 'Add some feature'`).
-6.  **Push to the branch** (`git push origin feature/my-new-feature`).
-7.  **Submit a pull request**.
+- **🐛 Bug fixes** - Help us squash issues
+- **✨ New features** - Add capabilities to the platform
+- **📚 Documentation** - Improve guides and API docs
+- **🧪 Testing** - Expand test coverage
+- **🎨 UI/UX improvements** - Enhance the user experience
+- **🔧 Performance optimizations** - Make the system faster
 
-## Technical Documentation
+## 📖 Documentation Quick Links
 
-To help you get started, we've prepared a suite of technical documents:
+Before diving in, familiarize yourself with our documentation:
 
-- **[Code Tour (`CODE_TOUR.md`)](CODE_TOUR.md)**: A detailed, narrative-style guide to the entire codebase. A great place to start to understand how all the pieces fit together.
-- **[API Reference (`API.md`)](API.md)**: Comprehensive documentation for all API endpoints.
+- **[README.md](README.md)** - Deployment, installation, and user guide
+- **[CODE_TOUR.md](CODE_TOUR.md)** - Detailed codebase architecture and patterns
+- **[API.md](API.md)** - Complete API specification and examples
 
 ---
 
-## Architecture
+## 🚀 Quick Development Setup
 
-### Services
+### Prerequisites
 
-- **🌐 CyberTraceAI-Ops App** (`app`): Next.js application with AI chat and network observability
-  - Includes Docker CLI for MCP container management
-  - Direct integration with SuzieQ REST API
-  - Real-time network device monitoring and analysis
-- **🗄️ PostgreSQL Database** (`database`): Stores chat history, user data, and sessions
-  - Automatic schema migrations and table creation
-  - NextAuth.js session management with database strategy
-- **📊 SuzieQ MCP Integration**: Dynamic MCP containers for network observability
-  - **Auto-Detection**: Automatically detects Docker Compose networks or falls back to host networking
-  - **Environment Adaptive**: Works seamlessly in both Docker deployment and local development
-  - Connects to external SuzieQ REST API at `host.docker.internal:8000`
-  - Provides network device discovery, interface monitoring, and BGP analysis
-  - Temporary container approach for secure, isolated tool execution
+- **Node.js 18+** and **pnpm**
+- **Docker** and **Docker Compose**
+- **Git** for version control
+- **VSCode** (recommended) with TypeScript extension
 
-### Features
-
-- **AI Chat**: Powered by Claude 3.7 Sonnet and GPT-4o via OpenRouter (Optional)
-- **Network Observability**: SuzieQ MCP integration for network analysis
-- **Authentication**: Google OAuth with NextAuth.js (fully automated setup) (Easy to add more providers)
-- **Real-time Chat**: Persistent chat history with automatic title generation
-- **Docker-First**: Optimized for containerized deployment with zero-config database setup
-- **Self-Healing**: Automatic database migrations and schema validation
-
-## Development
-
-### Development Options
-
-#### Option 1: Pre-built Image Development
+### 1. Fork and Clone
 
 ```bash
-# Quick development setup with pre-built image
-docker run -d \
-  --name cybertraceai-dev \
-  -p 3000:3000 \
-  -e NODE_ENV=development \
-  -e NEXTAUTH_SECRET=dev-secret \
-  -e AUTH_GOOGLE_ID=your_google_client_id \
-  -e AUTH_GOOGLE_SECRET=your_google_client_secret \
-  -e OPENROUTER_API_KEY=your_openrouter_api_key \
-  luispoveda93/cybertraceai:latest
+# Fork the repository on GitHub, then clone your fork
+git clone https://github.com/YOUR_USERNAME/cybertraceai-ops-2.git
+cd cybertraceai-ops-2
+
+# Add upstream remote
+git remote add upstream https://github.com/luispoveda93/cybertraceai-ops-2.git
 ```
 
-#### Option 2: Local Development (Build from Source)
-
-For development with hot reload and source code changes:
+### 2. Development Environment Setup
 
 ```bash
-# Use development compose file
+# Install dependencies
+pnpm install
+
+# Copy environment template
+cp .env.example .env
+
+# Set up minimal development environment
+# Edit .env with your development values:
+# - NEXTAUTH_SECRET=dev-secret-key
+# - AUTH_GOOGLE_ID=your_dev_google_id
+# - AUTH_GOOGLE_SECRET=your_dev_google_secret
+# - OPENROUTER_API_KEY=your_openrouter_key
+```
+
+### 3. Start Development Environment
+
+**Option A: Quick Development (Recommended)**
+```bash
+# Use development compose with hot reload
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 
-# Or for traditional development
-pnpm install
+# Check everything is working
+curl http://localhost:3000
+```
+
+**Option B: Local Development**
+```bash
+# Start database only
+docker compose up -d database
+
+# Run app locally with hot reload
 pnpm dev
 ```
 
-### Environment Variables
-
-See `.env.example` for all available configuration options:
-
-- **Database**: Auto-configured for Docker deployment
-- **Authentication**: NextAuth.js with Google OAuth
-- **AI Integration**: OpenRouter API for Claude/GPT models
-- **SuzieQ MCP**: Network observability server with auto-detecting Docker network configuration
-- **Docker Integration**: Docker CLI mounted for MCP container management with intelligent network detection
-
-#### Required Environment Variables
+### 4. Verify Setup
 
 ```bash
-# Core Application
-NEXTAUTH_SECRET=your-secure-random-secret
-POSTGRES_URL=postgresql://postgres:password@database:5432/cybertraceai
-
-# Authentication
-AUTH_GOOGLE_ID=your_google_oauth_client_id
-AUTH_GOOGLE_SECRET=your_google_oauth_client_secret
-
-# AI Integration
-OPENROUTER_API_KEY=your_openrouter_api_key
-
-# SuzieQ Network Observability
-SUZIEQ_API_ENDPOINT=http://host.docker.internal:8000/api/v2
-SUZIEQ_API_KEY=your_suzieq_api_key
-
-# MCP Docker Network (Optional - auto-detects by default)
-MCP_DOCKER_NETWORK=auto # Options: auto, host, or specific network name
+# Run the test suite to verify everything works
+./test-deployment.sh
 ```
 
-### Manual Setup (Non-Docker)
+🎉 **You're ready to contribute!** Visit http://localhost:3000 to see your development environment.
 
-If you prefer running without Docker:
+---
 
-1.  **Install dependencies**
+## 💻 Code Guidelines & Standards
 
-    ```bash
-    pnpm install
-    ```
+### TypeScript & React Patterns
 
-2.  **Setup database**
+**Component Structure:**
+```typescript
+// Follow this pattern for new components
+import { cn } from '@/lib/utils'
 
-    ```bash
-    # Setup PostgreSQL and update POSTGRES_URL in .env
-    pnpm db:generate
-    pnpm db:migrate
-    ```
+interface ComponentProps {
+  className?: string
+  // Use specific types, avoid 'any'
+  data: NetworkDevice[]
+  onSelect?: (device: NetworkDevice) => void
+}
 
-    _Note: Docker deployment handles database setup automatically_
+export function Component({ className, data, onSelect }: ComponentProps) {
+  return (
+    <div className={cn("base-styles", className)}>
+      {/* Component content */}
+    </div>
+  )
+}
+```
 
-3.  **Run development server**
-    ```bash
-    pnpm dev --port 3000
-    ```
+**File Organization:**
+- **Components**: Group by feature in `components/` subdirectories
+- **API Routes**: Use RESTful patterns in `app/api/`
+- **Utilities**: Place in `lib/utils/` with clear naming
+- **Types**: Define in component files or `types/` for shared types
 
-## Docker Details
+**Import Conventions:**
+```typescript
+// Order: External packages → Internal utilities → Components
+import { useEffect, useState } from 'react'
+import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+```
 
-### Container Images
+### Styling Guidelines
 
-- **App**: `luispoveda93/cybertraceai:latest` (or `luispoveda93/cybertraceai:0.2.0` for specific version)
-  - Multi-stage Node.js 18 Alpine with standalone Next.js build
-  - Available on Docker Hub for instant deployment
-- **Database**: PostgreSQL 15 Alpine with initialization scripts
-- **SuzieQ MCP**: Official `mcp/suzieq-mcp` image for network observability
+**Tailwind CSS Patterns:**
+- Use `cn()` utility for conditional classes
+- Prefer Tailwind classes over custom CSS
+- Follow responsive-first design (`mobile → tablet → desktop`)
+- Use design system spacing (`space-y-4`, `gap-6`, etc.)
 
-### Volumes
+**Component Styling:**
+```typescript
+// Good: Composable, conditional classes
+const buttonStyles = cn(
+  "px-4 py-2 rounded-md font-medium",
+  variant === "primary" && "bg-blue-600 text-white",
+  variant === "secondary" && "bg-gray-100 text-gray-900",
+  disabled && "opacity-50 cursor-not-allowed",
+  className
+)
+```
 
-- `postgres_data`: Persistent database storage
-- Application logs and configs are handled by containers
+### Error Handling
 
-### Networking
+**API Routes:**
+```typescript
+try {
+  // Your logic here
+  return NextResponse.json({ success: true })
+} catch (error) {
+  console.error('Descriptive error context:', error)
+  return NextResponse.json(
+    { error: 'User-friendly message' },
+    { status: 500 }
+  )
+}
+```
 
-- **Internal network**: `cybertraceai_network` for service communication
-- **MCP Network Detection**: Automatically detects Docker Compose networks or uses host networking
-- **Adaptive Configuration**: Works in both Docker and local development environments
-- **Exposed ports**: Only port 3000 for web access
-- **Security**: Services communicate via internal hostnames
+**Client Components:**
+```typescript
+// Use error boundaries and proper error states
+const [error, setError] = useState<string | null>(null)
 
-### Health Checks
+// Handle errors gracefully
+if (error) {
+  return <ErrorMessage message={error} onRetry={() => setError(null)} />
+}
+```
 
-All services include comprehensive health checks:
+---
 
-- HTTP endpoint monitoring
-- Database connectivity
-- MCP service availability
-- Environment validation
+## 🔄 Git Workflow & Pull Requests
 
-## Production Deployment
+### Branch Naming
 
-For production deployment:
+Use descriptive branch names with prefixes:
+```bash
+git checkout -b feature/add-bgp-analysis-tool
+git checkout -b fix/chat-history-loading-bug
+git checkout -b docs/update-api-examples
+git checkout -b refactor/improve-database-queries
+```
 
-1.  **Use production environment variables**
+### Commit Messages
 
-    ```bash
-    cp .env.example .env.production
-    # Edit with production values
-    ```
+Follow conventional commit format:
+```bash
+# Format: type(scope): description
+git commit -m "feat(chat): add real-time message streaming"
+git commit -m "fix(auth): resolve session timeout issue"
+git commit -m "docs(api): add SuzieQ integration examples"
+git commit -m "refactor(db): optimize chat message queries"
+```
 
-2.  **Enable HTTPS**
+**Types**: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
 
-    - Configure reverse proxy (nginx/traefik)
-    - Use SSL certificates
-    - Update NEXTAUTH_URL
+### Pull Request Process
 
-3.  **Database security**
+**Before Opening a PR:**
+1. **Sync with upstream**:
+   ```bash
+   git fetch upstream
+   git rebase upstream/develop
+   ```
+2. **Run tests**: `./test-deployment.sh`
+3. **Check formatting**: `pnpm lint`
+4. **Verify builds**: `pnpm build`
 
-    - Use strong passwords
-    - Configure backup strategy
-    - Monitor database performance
+**PR Requirements:**
+- [ ] Clear, descriptive title
+- [ ] Description explains the problem and solution
+- [ ] Tests pass (`./test-deployment.sh`)
+- [ ] No linting errors (`pnpm lint`)
+- [ ] Documentation updated if needed
+- [ ] Screenshots for UI changes
 
-4.  **Monitoring**
-    - Set up log aggregation
-    - Configure health check alerts
-    - Monitor resource usage
+**PR Template:**
+```markdown
+## Problem
+Brief description of the issue or feature request
+
+## Solution
+How this PR addresses the problem
+
+## Testing
+- [ ] Tested locally with development environment
+- [ ] Added/updated tests if applicable
+- [ ] Verified no regressions
+
+## Documentation
+- [ ] Updated relevant documentation
+- [ ] Added code comments for complex logic
+```
+
+### Handling Review Feedback
+
+- **Address all feedback** before requesting re-review
+- **Ask questions** if feedback is unclear
+- **Make commits** for each round of feedback, then squash before merge
+- **Be responsive** to reviewer questions
+
+---
+
+## 🛠️ Feature Development Guide
+
+### Adding UI Components
+
+**1. Create Component Structure:**
+```typescript
+// components/network/device-status.tsx
+import { NetworkDevice } from '@/types/network'
+
+interface DeviceStatusProps {
+  devices: NetworkDevice[]
+  onDeviceSelect: (device: NetworkDevice) => void
+}
+
+export function DeviceStatus({ devices, onDeviceSelect }: DeviceStatusProps) {
+  // Component implementation
+}
+```
+
+**2. Add to UI Library (if reusable):**
+```typescript
+// components/ui/status-indicator.tsx
+// Export via components/ui/index.ts for easy imports
+```
+
+**3. Integration Pattern:**
+Follow existing patterns in `components/` - see CODE_TOUR.md for detailed component architecture.
+
+### Extending AI Tools
+
+**1. Create Tool Definition:**
+```typescript
+// lib/ai/tools/network-analyzer.ts
+import { z } from 'zod'
+import { tool } from 'ai'
+
+export const networkAnalyzerTool = tool({
+  description: 'Analyze network topology and identify issues',
+  parameters: z.object({
+    deviceType: z.string(),
+    includeMetrics: z.boolean().optional(),
+  }),
+  execute: async ({ deviceType, includeMetrics }) => {
+    // Tool implementation
+    return { analysis: '...', recommendations: '...' }
+  }
+})
+```
+
+**2. Register Tool:**
+```typescript
+// app/api/chat/route.ts
+import { networkAnalyzerTool } from '@/lib/ai/tools/network-analyzer'
+
+const tools = {
+  // ... existing tools
+  network_analyzer: networkAnalyzerTool,
+}
+```
+
+### Database Schema Changes
+
+**1. Update Schema:**
+```typescript
+// lib/db/schema.ts
+export const networkDevices = pgTable('network_devices', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  hostname: varchar('hostname', { length: 255 }).notNull(),
+  // Add your new columns
+})
+```
+
+**2. Generate Migration:**
+```bash
+pnpm db:generate
+# Review the generated migration in lib/db/migrations/
+```
+
+**3. Test Migration:**
+```bash
+# Test on development database
+pnpm db:migrate
+```
+
+### Adding API Endpoints
+
+**1. Create Route Handler:**
+```typescript
+// app/api/network/devices/route.ts
+import { auth } from '@/lib/auth'
+import { getNetworkDevices } from '@/lib/db/queries'
+
+export async function GET(request: Request) {
+  const session = await auth()
+  if (!session?.user) {
+    return new Response('Unauthorized', { status: 401 })
+  }
+
+  try {
+    const devices = await getNetworkDevices(session.user.id)
+    return Response.json({ devices })
+  } catch (error) {
+    console.error('Failed to fetch devices:', error)
+    return Response.json({ error: 'Failed to fetch devices' }, { status: 500 })
+  }
+}
+```
+
+**2. Add Database Query:**
+```typescript
+// lib/db/queries.ts
+export async function getNetworkDevices(userId: string) {
+  return await db
+    .select()
+    .from(networkDevices)
+    .where(eq(networkDevices.userId, userId))
+}
+```
+
+**3. Update API Documentation:**
+Add endpoint details to `API.md` following existing patterns.
+
+---
+
+## 🧪 Testing & Quality Assurance
+
+### Running Tests Locally
+
+**Full Test Suite:**
+```bash
+# Run complete integration test suite
+./test-deployment.sh
+```
+
+**Development Tests:**
+```bash
+# Check linting
+pnpm lint
+
+# Type checking
+pnpm type-check
+
+# Build verification
+pnpm build
+```
+
+### Test Requirements for Contributions
+
+**New Features:**
+- [ ] Integration test coverage for critical paths
+- [ ] Error handling verification
+- [ ] Database migration testing (if applicable)
+
+**Bug Fixes:**
+- [ ] Test that reproduces the bug
+- [ ] Verification that fix resolves the issue
+- [ ] Regression testing for related functionality
+
+### Quality Standards
+
+**Code Quality Checks:**
+- **TypeScript**: No `any` types, proper type definitions
+- **ESLint**: All linting rules must pass
+- **Formatting**: Consistent code formatting
+- **Performance**: No obvious performance regressions
+
+**Database Guidelines:**
+- **Migrations**: Always backwards compatible
+- **Queries**: Use proper indexes, avoid N+1 queries
+- **Transactions**: Use for multi-step operations
+
+### Debugging Tips
+
+**Development Environment:**
+```bash
+# View application logs
+docker compose logs -f app
+
+# Check database connections
+docker exec cybertraceai-db psql -U postgres -d cybertraceai -c "\dt"
+
+# Monitor MCP container activity
+docker ps | grep mcp
+```
+
+**Common Issues:**
+- **Auth problems**: Check Google OAuth configuration in `.env`
+- **Database issues**: Verify migrations with `pnpm db:migrate`
+- **MCP tools failing**: Check Docker socket permissions and SuzieQ API connectivity
+
+---
+
+## 📚 Documentation & Community
+
+### Documentation Updates
+
+**When to Update Documentation:**
+
+- **API.md**: When adding/modifying API endpoints
+- **CODE_TOUR.md**: When changing architecture or major patterns
+- **README.md**: When changing deployment/setup process
+- **CONTRIBUTING.md**: When modifying development workflow
+
+**Code Documentation:**
+```typescript
+/**
+ * Executes SuzieQ network query with proper error handling
+ * @param query - SuzieQ table and parameters
+ * @param timeout - Execution timeout in milliseconds
+ * @returns Promise with network data or error details
+ */
+export async function executeSuzieQQuery(
+  query: SuzieQQuery,
+  timeout: number = 30000
+): Promise<NetworkQueryResult> {
+  // Implementation with inline comments for complex logic
+}
+```
+
+### Issue Reporting
+
+**Bug Reports:**
+Include:
+- Environment details (OS, Docker version, browser)
+- Steps to reproduce
+- Expected vs actual behavior
+- Relevant logs or screenshots
+- Minimal reproduction case
+
+**Feature Requests:**
+Include:
+- Problem description
+- Proposed solution
+- Use cases and benefits
+- Alternative approaches considered
+
+### Security Issues
+
+**Security Vulnerabilities:**
+- **Do not** open public issues for security problems
+- Email security issues to: luis.poveda@cybertraceai.com
+- Include detailed reproduction steps
+- Allow reasonable time for fixes before disclosure
+
+### Getting Help
+
+**Development Questions:**
+- Check existing issues and discussions
+- Review CODE_TOUR.md for architecture understanding
+- Ask questions in issue comments or discussions
+
+**Community Guidelines:**
+- Be respectful and constructive
+- Help others when you can
+- Share knowledge and best practices
+- Follow the project's code of conduct
+
+---
+
+## 🏁 Ready to Contribute?
+
+1. **📋 Check existing issues** for good first contributions
+2. **💬 Join discussions** to understand project direction  
+3. **🔧 Set up your development environment** following this guide
+4. **🎯 Start with small changes** to get familiar with the workflow
+5. **📝 Open your first PR** and be part of the community!
+
+**Questions?** Open an issue or check our existing discussions. We're here to help you succeed!
+
+---
+
+## 📄 License
+
+By contributing to CyberTraceAI-Ops, you agree that your contributions will be licensed under the [Apache 2.0 License](LICENSE).
