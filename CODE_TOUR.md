@@ -6,7 +6,7 @@ section when you need details on a particular file.
 
 ---
 
-1.  Big-picture overview
+## 1. Big-picture overview
 
 ---
 
@@ -33,9 +33,36 @@ deployment.
     • saves the assistant/user messages in `message` table
 5.  Results stream back to the browser; the sidebar is refreshed.
 
+```mermaid
+graph TD
+    subgraph "User's Browser"
+        A["Load Page"] --> B{"useChat hook"};
+        B --> C["Send Message"];
+    end
+
+    subgraph "Next.js Backend"
+        C --> D["/api/chat route"];
+        D --> E["Auth Check"];
+        E --> F["Get/Create Chat in DB"];
+        F --> G{"Stream with AI Provider"};
+        G --> H["Use Tools"];
+        H --> I["Save Messages to DB"];
+    end
+
+    subgraph "External Services"
+        E --> J["NextAuth"];
+        F --> K["PostgreSQL DB"];
+        I --> K;
+        G --> L["OpenRouter"];
+        H -- optional --> M["SuzieQ MCP"];
+    end
+
+    G --> B;
+```
+
 ---
 
-2.  Technology stack at a glance
+## 2. Technology stack at a glance
 
 ---
 
@@ -49,21 +76,46 @@ deployment.
 
 ---
 
-3.  Directory & file map
+## 3. Directory & file map
 
 ---
 
+```text
+.
+├── app/                      # Next.js 14 App Router
+│   ├── api/                  # API routes (server-side)
+│   │   ├── auth/[...nextauth]/route.ts  # NextAuth session handler
+│   │   ├── chat/route.ts     # Core chat streaming endpoint
+│   │   └── chats/            # CRUD for chat history
+│   ├── auth/                 # Branded sign-in pages
+│   └── page.tsx              # Main chat UI (client-side)
+├── components/               # All React components
+│   ├── ui/                   # Generic, reusable widgets (shadcn)
+│   ├── providers/            # React context providers
+│   ├── sidebar/              # Chat history drawer
+│   └── *.tsx                 # Root-level chat components
+├── lib/                      # Business logic, DB, and AI
+│   ├── ai/                   # AI prompts and tools
+│   ├── auth.ts               # NextAuth configuration
+│   ├── db/                   # Drizzle ORM schema and queries
+│   └── utils/                # Helper functions
+├── public/                   # Static assets (images, etc.)
+├── scripts/                  # Standalone utility scripts
+├── tests/                    # E2E test suite for Docker stack
+├── Dockerfile                # Multi-stage production build
+├── docker-compose.yml        # Main Docker Compose stack
+├── next.config.ts            # Next.js app configuration
+└── tailwind.config.ts        # Tailwind CSS settings
 ```
-<code_block_to_apply_from>
-```
 
 ---
 
-4.  Detailed component reference
+## 4. Detailed component reference
 
 ---
 
-4.1 `app/` – routes & pages
+### 4.1 `app/` – routes & pages
+
 –––––––––––––––––––––––––––
 • `layout.tsx`
 Global HTML wrapper. Loads `SessionProvider`, `ThemeProvider`
@@ -91,7 +143,8 @@ NextAuth providers.
 – `api/chats/route.ts` – List & create chats for the signed-in user.
 – `api/chats/[id]/route.ts` – GET/PATCH/DELETE single chat.
 
-4.2 UI & domain components (`/components`)
+### 4.2 UI & domain components (`/components`)
+
 –––––––––––––––––––––––––––––––––––––––––
 • Chat flow
 – `ChatInput.tsx` Resizable textarea, Shift+Enter newline, Enter send.
@@ -128,7 +181,8 @@ localStorage + HTML class.
 • Hooks
 – `useCopyMessageHandler.ts` – Handles the copy-to-clipboard toast logic.
 
-4.3 `lib/`
+### 4.3 `lib/`
+
 ––––––––––
 • `auth.ts` – `createAuthOptions()` generates NextAuth config with:
 – Google OAuth provider (IDs pulled from env)
@@ -161,14 +215,16 @@ plus `shouldUpdateTitle()` guard.
 • `utils.ts`
 `cn()` – Tailwind class-name merger (clsx + tailwind-merge).
 
-4.4 `scripts/`
+### 4.4 `scripts/`
+
 ––––––––––––––
 Small Node.js utilities run with `pnpm tsx`:
 • `setup-db.ts` Initialises schema locally.
 • `update-chat-titles.ts` Back-fills titles for existing rows.
 • `fix-user-id.ts` Data-migration helper.
 
-4.5 `tests/`
+### 4.5 `tests/`
+
 ––––––––––––
 `test-suite.js` spins up the full Docker stack and asserts:
 – containers are healthy,
@@ -179,7 +235,7 @@ Run via `./test-deployment.sh`.
 
 ---
 
-5.  Environment variables (superset)
+## 5. Environment variables (superset)
 
 ---
 
@@ -195,7 +251,7 @@ Run via `./test-deployment.sh`.
 
 ---
 
-6.  Build & deployment artefacts
+## 6. Build & deployment artefacts
 
 ---
 
@@ -206,7 +262,7 @@ Run via `./test-deployment.sh`.
 
 ---
 
-7.  Extending / modifying
+## 7. Extending / modifying
 
 ---
 
@@ -218,7 +274,7 @@ commit the new migration under `lib/db/migrations/`.
 
 ---
 
-8.  Glossary of key React components
+## 8. Glossary of key React components
 
 ---
 

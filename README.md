@@ -323,7 +323,7 @@ We welcome contributions! Please read our [**CONTRIBUTING.md**](CONTRIBUTING.md)
 
 ## 📄 License
 
-Apache 2.0
+[Apache 2.0](LICENSE)
 
 ## 📞 Support
 
