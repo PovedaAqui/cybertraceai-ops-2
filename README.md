@@ -2,41 +2,9 @@
 
 CybertraceAI-Ops is an open-source AI agent designed to simplify IT network observability through natural language interactions.
 
-## 🚀 Ultra-Quick Start (Pre-built Image)
+## 🚀 Deployment
 
-The fastest way to get CyberTrace AI running is using our pre-built Docker image from Docker Hub. No building required!
-
-### Prerequisites
-
-- Docker installed
-- OpenRouter API key (for AI functionality)
-- Google OAuth credentials (for authentication)
-
-### 2-Step Instant Deployment
-
-1. **Run with Docker Hub image**
-
-   ```bash
-   docker run -d \
-     --name cybertraceai-app \
-     -p 3000:3000 \
-     -e NEXTAUTH_SECRET=your-super-secret-jwt-secret-here \
-     -e AUTH_GOOGLE_ID=your_google_client_id \
-     -e AUTH_GOOGLE_SECRET=your_google_client_secret \
-     -e OPENROUTER_API_KEY=your_openrouter_api_key_here \
-     -e SUZIEQ_API_ENDPOINT=http://host.docker.internal:8000/api/v2 \
-     -e SUZIEQ_API_KEY=your_suzieq_api_key_here \
-     luispoveda93/cybertraceai:latest
-   ```
-
-2. **Access the application**
-   🎉 **Visit: [http://localhost:3000](http://localhost:3000)**
-
-> **Note**: This single-container setup is perfect for quick testing. For production with database persistence, use the full Docker Compose setup below.
-
-## 🚀 Full Stack Deployment with Docker Compose
-
-For production deployments with persistent database and complete infrastructure:
+CyberTrace AI requires both the application and a database to work, so we use Docker Compose to run both containers together.
 
 ### Prerequisites
 
@@ -44,7 +12,42 @@ For production deployments with persistent database and complete infrastructure:
 - OpenRouter API key (for AI functionality)
 - Google OAuth credentials (for authentication)
 
-### 3-Step Complete Deployment
+## 🚀 Quick Start (No Cloning Required)
+
+Don't want to clone the entire repository? You only need 3 files:
+
+- `docker-compose.yml` - Defines app and database containers
+- `.env` - Environment variables for configuration  
+- `init-db.sql` - Sets up database extensions and permissions
+
+### 2-Step Quick Deployment
+
+1. **Download required files**
+
+   ```bash
+   # Download the 3 essential files
+   curl -o docker-compose.yml https://raw.githubusercontent.com/PovedaAqui/cybertraceai-ops-2/main/docker-compose.yml
+   curl -o .env https://raw.githubusercontent.com/PovedaAqui/cybertraceai-ops-2/main/.env.example
+   curl -o init-db.sql https://raw.githubusercontent.com/PovedaAqui/cybertraceai-ops-2/main/init-db.sql
+   ```
+
+2. **Configure and deploy**
+
+   ```bash
+   # Edit .env with your API keys (same as step 2 below)
+   nano .env
+   
+   # Start the application
+   docker compose up -d
+   ```
+
+🎉 **Access the application at: [http://localhost:3000](http://localhost:3000)**
+
+> **Note**: For code modifications or development, use the full deployment method below.
+
+## 🚀 Full Deployment (With Source Code)
+
+### 3-Step Deployment
 
 1. **Clone and setup environment**
 
@@ -125,26 +128,6 @@ This will check:
 - **Development**: Built from source for latest features
 
 ### Upgrading
-
-#### Docker Hub Image
-
-```bash
-# Pull latest version
-docker pull luispoveda93/cybertraceai:latest
-
-# Stop current container
-docker stop cybertraceai-app
-docker rm cybertraceai-app
-
-# Run with new image
-docker run -d \
-  --name cybertraceai-app \
-  -p 3000:3000 \
-  [your environment variables] \
-  luispoveda93/cybertraceai:latest
-```
-
-#### Docker Compose
 
 ```bash
 # Pull latest images
