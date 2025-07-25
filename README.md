@@ -11,6 +11,7 @@ CyberTrace AI requires both the application and a database to work, so we use Do
 - Docker and Docker Compose installed
 - OpenRouter API key (for AI functionality)
 - Google OAuth credentials (for authentication)
+- SuzieQ REST API server is running (more providers coming soon)
 
 ## 🚀 Quick Start (No Cloning Required)
 
