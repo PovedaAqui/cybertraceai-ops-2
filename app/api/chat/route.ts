@@ -5,7 +5,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { humanizeTimestampTool } from '@/lib/ai/tools/humanize-timestamp';
 import { tableTool } from '@/lib/ai/tools/table';
-import { SYSTEM_PROMPT } from '@/lib/ai/prompts';
+import { SYSTEM_PROMPT_INTRO, SYSTEM_PROMPT_DOCS } from '@/lib/ai/prompts';
 import { getOrCreateUser, saveMessage, getChatById, createChat, updateChatTitle, getChatMessageCount } from '@/lib/db/queries';
 import { generateChatTitle, shouldUpdateTitle } from '@/lib/utils/chat-title';
 import { NextResponse } from 'next/server';
@@ -177,10 +177,30 @@ export async function POST(req: Request) {
     console.log('🤖 Starting streamText with model:', model);
     console.log('🛠️ Available tools:', Object.keys(tools));
     
+    // Create optimized cached system message for prompt caching
+    const systemMessage = {
+      role: "system" as const,
+      content: [
+        {
+          type: "text" as const,
+          text: SYSTEM_PROMPT_INTRO
+        },
+        {
+          type: "text" as const,
+          text: SYSTEM_PROMPT_DOCS,
+          cache_control: {
+            type: "ephemeral"
+          }
+        }
+      ]
+    };
+
+    // Prepend system message to messages array for caching
+    const messagesWithSystem = [systemMessage, ...messages];
+    
     const result = streamText({
       model,
-      messages,
-      system: SYSTEM_PROMPT,
+      messages: messagesWithSystem,
       tools,
       maxSteps: 5,
       onFinish: async (event) => {
