@@ -1,6 +1,12 @@
 # CyberTrace AI - API Reference
 
-This document provides the complete API specification for CyberTrace AI. For deployment and configuration instructions, see [README.md](README.md). For codebase architecture details, see [CODE_TOUR.md](CODE_TOUR.md).
+This document provides the complete API specification for CyberTrace AI. 
+
+**📚 Related Documentation:**
+- [README.md](README.md) - Deployment and user guide  
+- [CODE_TOUR.md](CODE_TOUR.md) - Codebase architecture and development patterns
+- [CONTRIBUTING.md](CONTRIBUTING.md) - Development setup and contribution guidelines
+- [DOCKER.md](DOCKER.md) - Advanced Docker configuration and production deployment
 
 ## Table of Contents
 
@@ -84,6 +90,14 @@ For authenticated requests, the session cookie is automatically included:
 Cookie: next-auth.session-token=eyJhbGciOiJIUzI1NiJ9...
 ```
 
+**cURL Authentication Pattern:**
+```bash
+# All authenticated endpoints use this cookie header pattern:
+curl -X [METHOD] "http://localhost:3000/api/[endpoint]" \
+  -H "Cookie: next-auth.session-token=your-session-token" \
+  -H "Content-Type: application/json"
+```
+
 ## Core API Endpoints
 
 ### Authentication Endpoints
@@ -134,8 +148,8 @@ null
 
 **cURL Example**:
 ```bash
-curl -X GET "http://localhost:3000/api/auth/session" \
-  -H "Cookie: next-auth.session-token=your-session-token"
+curl -X GET "http://localhost:3000/api/auth/session"
+# Note: Include authentication headers as shown above
 ```
 
 ### Chat Management
@@ -174,8 +188,7 @@ Get all chats for authenticated user, ordered by most recently updated.
 
 **cURL Example**:
 ```bash
-curl -X GET "http://localhost:3000/api/chats" \
-  -H "Cookie: next-auth.session-token=your-session-token"
+curl -X GET "http://localhost:3000/api/chats"
 ```
 
 #### POST `/api/chats`
@@ -215,8 +228,6 @@ Create a new chat with specified title.
 **cURL Example**:
 ```bash
 curl -X POST "http://localhost:3000/api/chats" \
-  -H "Cookie: next-auth.session-token=your-session-token" \
-  -H "Content-Type: application/json" \
   -d '{"title": "Network Performance Analysis"}'
 ```
 
@@ -225,7 +236,7 @@ curl -X POST "http://localhost:3000/api/chats" \
 Get specific chat with all messages and tool invocations.
 
 **Path Parameters**:
-- `id` (string): Chat UUID
+- `id` (string): Chat ID
 
 **Headers**:
 - `Cookie`: NextAuth session cookie (required)
@@ -278,8 +289,7 @@ Get specific chat with all messages and tool invocations.
 
 **cURL Example**:
 ```bash
-curl -X GET "http://localhost:3000/api/chats/01234567-89ab-cdef-0123-456789abcdef" \
-  -H "Cookie: next-auth.session-token=your-session-token"
+curl -X GET "http://localhost:3000/api/chats/01234567-89ab-cdef-0123-456789abcdef"
 ```
 
 #### PATCH `/api/chats/[id]`
@@ -363,7 +373,7 @@ Send message and get AI response with optional MCP tools.
 
 **Chat Management Features**:
 
-- **Automatic Chat Creation**: If no `id` is provided or if `id` is not a valid UUID, a new chat is automatically created
+- **Automatic Chat Creation**: If no `id` is provided or if chat with provided `id` doesn't exist or doesn't belong to the user, a new chat is automatically created
 - **Title Generation**: New chats with generic titles (like "New Chat") are automatically updated with titles generated from the first user message
 - **User Management**: Users are automatically created in the database if they don't exist (based on session information)
 

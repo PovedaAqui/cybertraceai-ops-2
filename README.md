@@ -14,21 +14,19 @@ CyberTrace AI requires both the application and a database to work, so we use Do
 
 ## 🚀 Quick Start (No Cloning Required)
 
-Don't want to clone the entire repository? You only need 3 files:
+Don't want to clone the entire repository? You only need 2 files:
 
 - `docker-compose.yml` - Defines app and database containers
-- `.env` - Environment variables for configuration  
-- `init-db.sql` - Sets up database extensions and permissions
+- `.env` - Environment variables for configuration
 
 ### 2-Step Quick Deployment
 
 1. **Download required files**
 
    ```bash
-   # Download the 3 essential files
+   # Download the 2 essential files
    curl -o docker-compose.yml https://raw.githubusercontent.com/PovedaAqui/cybertraceai-ops-2/main/docker-compose.yml
    curl -o .env https://raw.githubusercontent.com/PovedaAqui/cybertraceai-ops-2/main/.env.example
-   curl -o init-db.sql https://raw.githubusercontent.com/PovedaAqui/cybertraceai-ops-2/main/init-db.sql
    ```
 
 2. **Configure and deploy**
@@ -36,7 +34,7 @@ Don't want to clone the entire repository? You only need 3 files:
    ```bash
    # Edit .env with your API keys (same as step 2 below)
    nano .env
-   
+
    # Start the application
    docker compose up -d
    ```
@@ -123,8 +121,8 @@ This will check:
 
 ### Available Versions
 
-- **Latest**: `luispoveda93/cybertraceai:latest` (currently v0.2.0)
-- **Specific**: `luispoveda93/cybertraceai:0.2.0` (stable release)
+- **Latest**: `luispoveda93/cybertraceai:latest` (currently v0.2.1)
+- **Specific**: `luispoveda93/cybertraceai:0.2.1` (stable release)
 - **Development**: Built from source for latest features
 
 ### Upgrading
@@ -139,7 +137,8 @@ docker compose up -d
 
 ### Version History
 
-- **v0.2.0** (Latest): Enhanced MCP integration, improved Docker deployment, TypeScript fixes
+- **v0.2.1** (Latest): NextAuth-based ID system, codebase cleanup, eliminated UUID dependencies, streamlined Docker configuration
+- **v0.2.0**: Enhanced MCP integration, improved Docker deployment, TypeScript fixes
 - **v0.1.0**: Initial release with basic chat functionality and SuzieQ integration
 
 ## 📋 Commands
@@ -173,9 +172,10 @@ docker compose up -d
 
 This README file provides user-focused instructions for running the application. For more detailed technical information, please see our other documentation files:
 
-- **[CONTRIBUTING.md](CONTRIBUTING.md)**: A comprehensive guide for developers, including local setup, architecture overview, and contribution guidelines.
-- **[CODE_TOUR.md](CODE_TOUR.md)**: A narrative walkthrough of the entire codebase, explaining how all the pieces fit together.
-- **[API.md](API.md)**: Detailed reference documentation for all API endpoints.
+- **[CONTRIBUTING.md](CONTRIBUTING.md)**: Developer guide with local setup, architecture overview, and contribution guidelines
+- **[CODE_TOUR.md](CODE_TOUR.md)**: Narrative walkthrough of the entire codebase architecture and patterns
+- **[API.md](API.md)**: Complete API reference documentation for all endpoints and integrations
+- **[DOCKER.md](DOCKER.md)**: Advanced Docker configuration, production deployment, and technical troubleshooting
 
 ## 🚨 Troubleshooting
 

@@ -6,7 +6,7 @@ import { authOptions } from '@/lib/auth';
 import { humanizeTimestampTool } from '@/lib/ai/tools/humanize-timestamp';
 import { tableTool } from '@/lib/ai/tools/table';
 import { SYSTEM_PROMPT } from '@/lib/ai/prompts';
-import { getOrCreateUser, saveMessage, getChatById, createChat, updateChatTitle } from '@/lib/db/queries';
+import { getOrCreateUser, saveMessage, getChatById, createChat, updateChatTitle, getChatMessageCount } from '@/lib/db/queries';
 import { generateChatTitle, shouldUpdateTitle } from '@/lib/utils/chat-title';
 import { NextResponse } from 'next/server';
 import { execSync } from 'child_process';
@@ -63,16 +63,10 @@ export async function POST(req: Request) {
       const newChat = await createChat(userId, 'New Chat');
       currentChatId = newChat.id;
     } else {
-      // Check if chatId is a valid UUID (database format)
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-      if (uuidRegex.test(currentChatId)) {
-        // It's a UUID, verify chat ownership
-        const chat = await getChatById(currentChatId);
-        if (!chat || chat.userId !== userId) {
-          return new Response('Chat not found', { status: 404 });
-        }
-      } else {
-        // It's a non-UUID ID (from AI SDK), create new chat
+      // Verify chat exists and belongs to user
+      const chat = await getChatById(currentChatId);
+      if (!chat || chat.userId !== userId) {
+        // Chat not found or doesn't belong to user, create new one
         const newChat = await createChat(userId, 'New Chat');
         currentChatId = newChat.id;
       }
@@ -81,10 +75,14 @@ export async function POST(req: Request) {
     // Save user message immediately
     const userMessage = messages[messages.length - 1];
     if (userMessage && userMessage.role === 'user') {
+      // Generate message ID based on chat and sequence
+      const messageCount = await getChatMessageCount(currentChatId);
+      const messageId = userMessage.id || `${currentChatId}_${String(messageCount + 1).padStart(3, '0')}`;
+      
       await saveMessage({
         ...userMessage,
         chatId: currentChatId,
-        id: userMessage.id || crypto.randomUUID(),
+        id: messageId,
         createdAt: userMessage.createdAt || new Date(),
       });
 
@@ -197,8 +195,9 @@ export async function POST(req: Request) {
           if (event.finishReason === 'stop' || event.finishReason === 'length') {
             console.log('💾 Saving assistant message...');
             // Build the assistant message from the response
+            const messageCount = await getChatMessageCount(currentChatId);
             const assistantMessage = {
-              id: crypto.randomUUID(),
+              id: `${currentChatId}_${String(messageCount + 1).padStart(3, '0')}`,
               role: 'assistant' as const,
               content: event.text || '',
               parts: event.toolCalls?.length ? [

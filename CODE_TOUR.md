@@ -1,6 +1,12 @@
 # CyberTraceAI-Ops – Codebase Reference Guide
 
-This document is a developer-focused tour of the codebase architecture and patterns. For deployment instructions, see [README.md](README.md). For API specifications, see [API.md](API.md).
+This document is a developer-focused tour of the codebase architecture and patterns.
+
+**📚 Related Documentation:**
+- [README.md](README.md) - Deployment instructions and user guide
+- [API.md](API.md) - Complete API specifications and examples
+- [CONTRIBUTING.md](CONTRIBUTING.md) - Development setup and contribution guidelines
+- [DOCKER.md](DOCKER.md) - Advanced Docker configuration and production deployment
 
 **Quick Navigation for Developers:**
 - [Architecture Overview](#1-big-picture-overview) - High-level system design
@@ -268,7 +274,7 @@ export const authOptions = {
 **Schema Architecture** (`schema.ts`):
 - **NextAuth Tables**: `user`, `account`, `session`, `verificationToken`
 - **Domain Tables**: `chat`, `message`
-- **Design Principles**: UUIDs, timestamps, referential integrity
+- **Design Principles**: NextAuth-based IDs, timestamps, referential integrity
 
 **Query Layer** (`queries.ts`) – Repository pattern with ~250 LOC:
 ```typescript
@@ -345,9 +351,7 @@ export function shouldUpdateTitle(currentTitle: string): boolean {
 
 ––––––––––––––
 Small Node.js utilities run with `pnpm tsx`:
-• `setup-db.ts` Initialises schema locally.
 • `update-chat-titles.ts` Back-fills titles for existing rows.
-• `fix-user-id.ts` Data-migration helper.
 
 ### 4.5 Testing Strategy
 
@@ -430,23 +434,27 @@ The application dynamically manages Docker containers for tool execution:
 - `chat`, `message` (application domain)
 
 **Key Design Decisions**:
-- UUIDs for all primary keys (distributed-friendly)
+- NextAuth-based hierarchical IDs for domain tables (traceable ownership)
 - Timestamp tracking on all entities
 - JSON columns for flexible tool invocation storage
 - Foreign key constraints maintain referential integrity
 
 ### Migration Strategy
 
-**Pattern**: SQL-first migrations with Drizzle ORM
-- Raw SQL files in `lib/db/migrations/`
-- Incremental, reversible changes
-- Production-safe migration practices
+**Pattern**: Single comprehensive schema with Drizzle ORM
+- Complete initial schema in `lib/db/migrations/0001_initial_nextauth_schema.sql`
+- NextAuth.js integration with varchar-based IDs from start
+- Production-ready schema with proper indexes and constraints
 
-**Example Migration Pattern**:
+**Current Migration Approach**:
 ```sql
--- 0004_nextauth_migration.sql
-ALTER TABLE "user" ADD COLUMN "emailVerified" timestamp;
-CREATE INDEX IF NOT EXISTS "user_email_idx" ON "user" ("email");
+-- 0001_initial_nextauth_schema.sql
+-- Complete schema with NextAuth.js integration from start
+-- All IDs are varchar(255) with NextAuth-based patterns
+CREATE TABLE chat (
+    id varchar(255) PRIMARY KEY,  -- Format: ${userId}_${timestamp}
+    ...
+);
 ```
 
 ---

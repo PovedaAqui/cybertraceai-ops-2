@@ -2,6 +2,12 @@
 
 This document provides comprehensive information about the Docker setup for CyberTrace AI, including architecture details, security considerations, and troubleshooting.
 
+**📚 Related Documentation:**
+- [README.md](README.md) - Quick start deployment and basic troubleshooting
+- [CODE_TOUR.md](CODE_TOUR.md) - Codebase architecture and development patterns
+- [CONTRIBUTING.md](CONTRIBUTING.md) - Development setup and contribution guidelines  
+- [API.md](API.md) - Complete API reference documentation
+
 ## Overview
 
 CyberTrace AI uses a multi-container Docker architecture with the following key components:
@@ -62,7 +68,6 @@ volumes:
 
 #### Features
 
-- **Automated Initialization**: Uses `init-db.sql` for initial setup
 - **Health Checks**: PostgreSQL readiness monitoring
 - **Persistent Storage**: Volume-mounted data directory
 - **Migration Support**: Schema migrations via application container
@@ -72,7 +77,6 @@ volumes:
 ```yaml
 volumes:
   - postgres_data:/var/lib/postgresql/data
-  - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
 ```
 
 ## Environment Configuration
@@ -207,16 +211,14 @@ Migrations run automatically via `docker-entrypoint.sh`:
 
 1. **Connectivity Check**: Waits for database availability using `netcat`
 2. **Table Verification**: Checks if essential tables exist
-3. **Migration Execution**: Applies SQL files from `lib/db/migrations/`
-4. **Verification**: Confirms successful table creation
+3. **Migration Execution**: Applies the initial schema SQL file directly via PostgreSQL
+4. **Verification**: Confirms successful table creation with NextAuth.js and application tables
 
 #### Migration Files
 
 ```bash
 lib/db/migrations/
-├── 0004_nextauth_migration.sql
-├── 0005_nextauth_complete.sql
-└── 0006_fix_expires_field.sql
+└── 0001_initial_nextauth_schema.sql
 ```
 
 #### Manual Migration Override
@@ -305,43 +307,31 @@ docker exec cybertraceai-app docker ps
 docker exec cybertraceai-app nc -z host.docker.internal 8000
 ```
 
-#### Database Connection Failures
+#### Advanced Database Troubleshooting
 
-**Symptom**: Application can't connect to database
+For basic database connectivity issues, see [README.md Troubleshooting](README.md#-troubleshooting).
 
-**Diagnosis**:
+**Advanced Diagnosis**:
 ```bash
-# Check database status
-docker compose ps database
+# Check PostgreSQL internal metrics
+docker exec cybertraceai-db psql -U postgres -d cybertraceai -c "SELECT * FROM pg_stat_activity;"
 
-# Check database logs
-docker compose logs database
-
-# Test connectivity from app container
-docker exec cybertraceai-app nc -z database 5432
+# Analyze database performance
+docker exec cybertraceai-db psql -U postgres -d cybertraceai -c "SELECT query, state, query_start FROM pg_stat_activity WHERE state != 'idle';"
 ```
 
 ### Log Analysis
 
-#### Application Logs
+For basic log viewing and troubleshooting commands, see the [Troubleshooting section in README.md](README.md#-troubleshooting).
+
+#### Advanced Log Analysis
 
 ```bash
-# Follow application logs
-docker compose logs -f app
+# Advanced log filtering for production debugging
+docker compose logs app | grep -E "(ERROR|FATAL|MCP.*failed)"
 
-# Filter for specific issues
-docker compose logs app | grep -i error
-docker compose logs app | grep -i mcp
-```
-
-#### Database Logs
-
-```bash
-# Database startup and connection logs
-docker compose logs database
-
-# Check for migration issues
-docker compose logs app | grep -i migration
+# Performance profiling logs
+docker compose logs app | grep -E "(Performance|slow|timeout)"
 ```
 
 ### Performance Monitoring
@@ -356,14 +346,14 @@ docker stats cybertraceai-app cybertraceai-db
 docker system df
 ```
 
-#### Health Status
+#### Advanced Health Monitoring
 
 ```bash
-# Overall container health
-docker compose ps
-
-# Detailed health check results
+# Detailed health check results and history
 docker inspect cybertraceai-app | grep -A 10 Health
+
+# Health check exit codes and timing
+docker inspect cybertraceai-app | jq '.State.Health'
 ```
 
 ## Security Best Practices

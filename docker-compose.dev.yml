@@ -47,7 +47,6 @@ services:
     volumes:
       # Use separate volume for development data
       - postgres_dev_data:/var/lib/postgresql/data
-      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
     healthcheck:
       # Faster health checks in development
       interval: 5s

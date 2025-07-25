@@ -2,12 +2,10 @@ import {
   pgTable,
   varchar,
   timestamp,
-  uuid,
   text,
   json,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
-import { sql } from 'drizzle-orm';
 
 // NextAuth.js required tables
 export const User = pgTable('user', {
@@ -50,7 +48,7 @@ export const VerificationToken = pgTable('verificationToken', {
 
 // Chat table to store conversation metadata
 export const Chat = pgTable('chat', {
-  id: uuid('id').default(sql`gen_random_uuid()`).primaryKey(),
+  id: varchar('id', { length: 255 }).primaryKey(),
   createdAt: timestamp('createdAt', { withTimezone: false }),
   title: text('title'),
   userId: varchar('userId', { length: 255 }).references(() => User.id),
@@ -59,8 +57,8 @@ export const Chat = pgTable('chat', {
 
 // Message table to store individual messages
 export const Message = pgTable('message', {
-  id: uuid('id').default(sql`gen_random_uuid()`).primaryKey(),
-  chatId: uuid('chatId').references(() => Chat.id),
+  id: varchar('id', { length: 255 }).primaryKey(),
+  chatId: varchar('chatId', { length: 255 }).references(() => Chat.id),
   role: varchar('role'),
   content: text('content'),
   parts: json('parts'),

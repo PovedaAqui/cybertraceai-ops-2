@@ -18,8 +18,9 @@ We welcome all types of contributions:
 Before diving in, familiarize yourself with our documentation:
 
 - **[README.md](README.md)** - Deployment, installation, and user guide
-- **[CODE_TOUR.md](CODE_TOUR.md)** - Detailed codebase architecture and patterns
+- **[CODE_TOUR.md](CODE_TOUR.md)** - Detailed codebase architecture and patterns  
 - **[API.md](API.md)** - Complete API specification and examples
+- **[DOCKER.md](DOCKER.md)** - Advanced Docker configuration and production deployment
 
 ---
 
@@ -45,6 +46,8 @@ git remote add upstream https://github.com/luispoveda93/cybertraceai-ops-2.git
 
 ### 2. Development Environment Setup
 
+**📖 First-time setup?** Review the [basic deployment guide in README.md](README.md#-full-deployment-with-source-code) to understand the overall setup process.
+
 ```bash
 # Install dependencies
 pnpm install
@@ -54,7 +57,7 @@ cp .env.example .env
 
 # Set up minimal development environment
 # Edit .env with your development values:
-# - NEXTAUTH_SECRET=dev-secret-key
+# - NEXTAUTH_SECRET=dev-secret-key  
 # - AUTH_GOOGLE_ID=your_dev_google_id
 # - AUTH_GOOGLE_SECRET=your_dev_google_secret
 # - OPENROUTER_API_KEY=your_openrouter_key
@@ -317,9 +320,10 @@ const tools = {
 ```typescript
 // lib/db/schema.ts
 export const networkDevices = pgTable('network_devices', {
-  id: uuid('id').defaultRandom().primaryKey(),
+  id: varchar('id', { length: 255 }).primaryKey(),
   hostname: varchar('hostname', { length: 255 }).notNull(),
   // Add your new columns
+  // Note: For ID generation, use NextAuth-based patterns: ${userId}_${timestamp}
 })
 ```
 
